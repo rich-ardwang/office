@@ -1,0 +1,61 @@
+// Helios.idl : IDL source for Helios
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (Helios.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	object,
+	uuid(409E2BC4-C25A-4842-9704-28E63F9EE2AE),
+	nonextensible,
+	pointer_default(unique)
+]
+interface ISumsAddin : IUnknown
+{
+};
+
+[
+	uuid(4AB2D326-9C5B-407D-B6E7-29D198D4BC2A),
+	version(1.0),
+]
+library HeliosLib
+{
+	[
+		object,
+		uuid(50DC24EF-722E-4AF0-8221-5E51B3345606),
+		dual,
+		nonextensible,
+		pointer_default(unique)
+	]
+	interface ICommandEvent : IDispatch
+	{
+		[id(1)] HRESULT RbnOnLoad([in] IDispatch* pRibbonUI);
+		[id(2)] HRESULT RbnOnBtnClick([in] IDispatch* pDispCtrl);
+		[id(3)] HRESULT RbnOnChkBox(IDispatch* pDispCtrl, BOOL bChecked);
+		[id(4)] IPictureDisp* RbnLoadImage([in] UINT image_id);
+		[id(5)] IPictureDisp* RbnGetImage(IDispatch* pDispCtrl);
+		[id(6)] LONG RbnGetSize(IDispatch* pDispCtrl);
+		[id(7)] BSTR RbnGetDesc(IDispatch* pDispCtrl);
+		[id(8)] BSTR RbnGetLabel(IDispatch* pDispCtrl);
+		[id(9)] BSTR RbnGetKeyTip(IDispatch* pDispCtrl);
+		[id(10)] BSTR RbnGetScreenTip(IDispatch* pDispCtrl);
+		[id(11)] BSTR RbnGetSuperTip(IDispatch* pDispCtrl);
+		[id(12)] VARIANT_BOOL RbnGetEnabled(IDispatch* pDispCtrl);
+		[id(13)] VARIANT_BOOL RbnGetVisible(IDispatch* pDispCtrl);
+		[id(14)] VARIANT_BOOL RbnGetShowImage(IDispatch* pDispCtrl);
+		[id(15)] VARIANT_BOOL RbnGetShowLabel(IDispatch* pDispCtrl);
+	};
+
+	importlib("stdole2.tlb");
+	[
+		uuid(35F2C579-0E39-4A67-AED7-05031A28058C)		
+	]
+	coclass SumsAddin
+	{
+		[default] interface ISumsAddin;
+	};
+};
+

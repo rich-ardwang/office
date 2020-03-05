@@ -1,0 +1,40 @@
+HKCR
+{
+	Helios.SumsAddin = s 'SumsAddin Class'
+    {
+        CLSID = s '{35F2C579-0E39-4A67-AED7-05031A28058C}'
+        CurVer = s 'Helios.SumsAddin.1'
+    }
+
+    Helios.SumsAddin.1= s 'SumsAddin Class'
+    {
+        CLSID = s '{35F2C579-0E39-4A67-AED7-05031A28058C}'
+    }
+}
+
+HKCU
+{
+    Software
+    {
+	    Microsoft
+	    {
+	        Office
+		    {
+		        Excel
+		        {
+		            Addins
+		            {
+		                'Helios.SumsAddin'
+			            {
+			                val FriendlyName = s 'Helios Sumscope'
+			                val Description = s 'Helios Sumscope'
+			                val LoadBehavior = d '00000003'
+			                val CommandLineSafe = d '00000001'
+			            }
+		            }
+		        }
+	        }
+        }
+    }
+}
+

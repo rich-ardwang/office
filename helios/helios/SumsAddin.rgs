@@ -1,0 +1,19 @@
+HKCR
+{
+	NoRemove CLSID
+	{
+		ForceRemove {35F2C579-0E39-4A67-AED7-05031A28058C} = s 'SumsAddin Class'
+		{
+			ProgID = s 'Helios.SumsAddin.1'
+            VersionIndependentProgID= s 'Helios.SumsAddin'
+
+			ForceRemove Programmable
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+			TypeLib = s '{4AB2D326-9C5B-407D-B6E7-29D198D4BC2A}'
+			Version = s '1.0'
+		}
+	}
+}
