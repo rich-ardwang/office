@@ -79,6 +79,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RegisterOutput>true</RegisterOutput>
     </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy  $(SolutionDir)helios\sumscope.jpg $(SolutionDir)$(Configuration)\sumscope.jpg</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -179,6 +186,7 @@
     <Midl Include="Helios.idl" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="sumscope.jpg" />
     <Xml Include="ribbon.xml" />
     <Image Include="bitmap1.bmp" />
     <Image Include="icon_main.ico" />
@@ -186,4 +194,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="Helios.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

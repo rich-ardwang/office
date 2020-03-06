@@ -48,12 +48,8 @@ STDMETHODIMP CUiMgr::RbnOnBtnClick(IDispatch* pDispCtrl)
     HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
     if (ctrl_id == "LoginButton")
     {
-        CLoginDlg dlg;
-        if (IDOK == dlg.DoModal())
-        {
-            //todo: login to CDH
-            ::MessageBox(m_MainWnd, L"login success.", L"MessageBox", MB_OK);
-        }
+        CLoginDlg dlg(m_MainWnd);
+        dlg.DoModal();
     }
     else if (ctrl_id == "")
     {
