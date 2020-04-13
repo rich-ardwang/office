@@ -3,8 +3,11 @@
 	<ribbon>
 		<tabs>
 			<tab id="CustomTab" label="Sumscoope">
-				<group id="CustomGroup" label="用户">
-					<button id="LoginButton" image="201" size="large" label="用户登录" onAction="RbnOnBtnClick"/>
+        <group idMso="GroupClipboard"/>
+        <group idMso="GroupFont"/>
+        <!--group idMso="GroupFormulaAuditing"/-->
+				<group id="CustomGroup" label="辅助功能">
+					<button id="LoginButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage"/>
 				</group>
 			</tab>
 		</tabs>

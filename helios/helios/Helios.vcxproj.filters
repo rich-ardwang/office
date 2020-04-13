@@ -1,108 +1,154 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Generated Files">
-      <UniqueIdentifier>{c14d6525-d016-4562-a503-0d60e0fdaee3}</UniqueIdentifier>
-      <SourceControlFiles>False</SourceControlFiles>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Helios.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="xdlldata.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Helios_i.c">
-      <Filter>Generated Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SumsAddin.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CUiMgr.cpp">
+    <ClCompile Include="CCalcEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CDoc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CMatrixData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CStrHash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CUiMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Helios.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helios_api.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Helios_i.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LoginDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SafeArray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SumsAddin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="xdlldata.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScContribFormula.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="cdh_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AddinMsgWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="dllmain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="xdlldata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Helios_i.h">
-      <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SumsAddin.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CUiMgr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LoginDlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="helios_itf.h">
+    <ClInclude Include="CCalcEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CDoc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CMatrixData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CStrHash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CUiMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dllmain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helios_i.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helios_itf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LoginDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SafeArray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SumsAddin.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xdlldata.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScContribFormula.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cdh_client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AddinMsgWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Helios.rc">
+    <Image Include="icon_main.ico">
       <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    </Image>
+    <Image Include="login.bmp" />
+    <Image Include="logout.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Helios.def">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="Helios.rgs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="SumsAddin.rgs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Helios.rgs">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="Helios.def">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="SumsAddin.rgs">
-      <Filter>Resource Files</Filter>
-    </None>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{fdb614c2-8fe2-4089-acac-4672c59fa5cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{ab1d83a6-29a8-4a24-b616-77bde59e0d26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{640b196a-d23a-4718-a598-fe1414e53195}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="Helios.idl">
@@ -110,17 +156,13 @@
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="ribbon.xml" />
-    <Image Include="icon_main.ico">
+    <Xml Include="ribbon.xml">
       <Filter>Resource Files</Filter>
-    </Image>
+    </Xml>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="bitmap1.bmp">
+    <ResourceCompile Include="Helios.rc">
       <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="sumscope.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

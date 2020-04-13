@@ -1,6 +1,16 @@
+//
+//  CUiMgr.cpp
+//
+//  Created by Colin on 2020-03-03.
+//  Copyright (c) 2020 Sumscope. All rights reserved.
+//
 #include "stdafx.h"
+#include "resource.h"
+#include "SumsAddin.h"
 #include "CUiMgr.h"
 #include "LoginDlg.h"
+#include "lava_utils_api.h"
+
 
 STDMETHODIMP CUiMgr::InterfaceSupportsErrorInfo(REFIID riid)
 {
@@ -18,9 +28,31 @@ STDMETHODIMP CUiMgr::InterfaceSupportsErrorInfo(REFIID riid)
 	return S_FALSE;
 }
 
-STDMETHODIMP_(void) CUiMgr::CaptureExcelMainHwnd()
+STDMETHODIMP_(void) CUiMgr::Initialize()
 {
-    ::EnumThreadWindows(::GetCurrentThreadId(), EnumThreadHwnd, (LPARAM)&m_MainWnd);
+    CaptureExcelMainHwnd();
+    m_MsgWnd.Initialize(m_MainWnd);
+}
+
+//
+// This mothod should be called in UI thread
+//
+STDMETHODIMP_(void) CUiMgr::InvalidateControl(__lv_in BSTR ctrlId)
+{
+    if (m_spRibbonUI)
+        m_spRibbonUI->raw_InvalidateControl(ctrlId);
+    else
+        log_error(helios_module, "IRibbonUI interface is empty.");
+}
+
+STDMETHODIMP_(void) CUiMgr::InvalidateControl(__lv_in UINT ctrlId)
+{
+    // convert ctrlId from UINT to BSTR, then call function above.
+}
+
+STDMETHODIMP_(void) CUiMgr::PostCustomMessage(__lv_in UINT Msg, __lv_in WPARAM wParam, __lv_in LPARAM lParam)
+{
+    m_MsgWnd.PostMessage(Msg, wParam, lParam);
 }
 
 STDMETHODIMP CUiMgr::raw_GetCustomUI(BSTR RibbonID, BSTR* RibbonXml)
@@ -28,7 +60,7 @@ STDMETHODIMP CUiMgr::raw_GetCustomUI(BSTR RibbonID, BSTR* RibbonXml)
     if (!RibbonXml)
         return E_POINTER;
 
-    *RibbonXml = GetXMLResource(IDR_RIBBON);
+    *RibbonXml = GetXmlResource(IDR_RIBBON);
     return *RibbonXml ? S_OK : E_OUTOFMEMORY;
 }
 
@@ -46,12 +78,13 @@ STDMETHODIMP CUiMgr::RbnOnBtnClick(IDispatch* pDispCtrl)
 
     CComBSTR ctrl_id;
     HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
-    if (ctrl_id == "LoginButton")
+    if (ctrl_id == _T("LoginButton"))
     {
-        CLoginDlg dlg(m_MainWnd);
+        CLoginDlg dlg;
         dlg.DoModal();
+        InvalidateControl(_T("LoginButton"));
     }
-    else if (ctrl_id == "")
+    else if (ctrl_id == _T(""))
     {
 
     }
@@ -80,6 +113,34 @@ STDMETHODIMP_(IPictureDisp*) CUiMgr::RbnLoadImage(UINT image_id)
 
 STDMETHODIMP_(IPictureDisp*) CUiMgr::RbnGetImage(IDispatch* pDispCtrl)
 {
+    CComQIPtr<IRibbonControl> rbn_ctrl = pDispCtrl;
+    ATLASSERT(rbn_ctrl);
+
+    CComBSTR ctrl_id;
+    HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
+    if (ctrl_id == _T("LoginButton"))
+    {
+        UINT imageId = 0;
+        if (CSumsAddin::GetAddin()->GetDoc()->GetLoginResult())
+            imageId = IDB_BITMAP_LOGIN;
+        else
+            imageId = IDB_BITMAP_LOGOUT;
+
+        HBITMAP hBitmap = (HBITMAP)::LoadImage(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(imageId),
+            IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTCOLOR);
+        PICTDESC pictdesc = { 0 };
+        pictdesc.cbSizeofstruct = sizeof(PICTDESC);
+        pictdesc.picType = PICTYPE_BITMAP;
+        pictdesc.bmp.hbitmap = hBitmap;
+        pictdesc.bmp.hpal = NULL;
+
+        IPictureDisp* pReturn = nullptr;
+        ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
+        return pReturn;
+    }
+    else if (ctrl_id == _T(""))
+    {
+    }
     return nullptr;
 }
 
@@ -95,6 +156,32 @@ STDMETHODIMP_(BSTR) CUiMgr::RbnGetDesc(IDispatch* pDispCtrl)
 
 STDMETHODIMP_(BSTR) CUiMgr::RbnGetLabel(IDispatch* pDispCtrl)
 {
+    CComQIPtr<IRibbonControl> rbn_ctrl = pDispCtrl;
+    ATLASSERT(rbn_ctrl);
+
+    CComBSTR ctrl_id;
+    HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
+    if (ctrl_id == _T("LoginButton"))
+    {
+        if (CSumsAddin::GetAddin()->GetDoc()->GetLoginResult())
+        {
+            CString str;
+            str.LoadString(IDS_ALREADY_LOGIN);
+            CComBSTR label(str);
+            return label.Detach();
+        }
+        else
+        {
+            CString str;
+            str.LoadString(IDS_PLEASE_LOGIN);
+            CComBSTR label(str);
+            return label.Detach();
+        }
+    }
+    else if (ctrl_id == _T(""))
+    {
+
+    }
     return nullptr;
 }
 
@@ -115,6 +202,19 @@ STDMETHODIMP_(BSTR) CUiMgr::RbnGetSuperTip(IDispatch* pDispCtrl)
 
 STDMETHODIMP_(VARIANT_BOOL) CUiMgr::RbnGetEnabled(IDispatch* pDispCtrl)
 {
+    CComQIPtr<IRibbonControl> rbn_ctrl = pDispCtrl;
+    ATLASSERT(rbn_ctrl);
+
+    CComBSTR ctrl_id;
+    HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
+    if (ctrl_id == _T("LoginButton"))
+    {
+
+    }
+    else if (ctrl_id == _T(""))
+    {
+
+    }
     return VARIANT_TRUE;
 }
 
@@ -152,7 +252,7 @@ HRESULT CUiMgr::GetResource(int nId, LPCTSTR lpType, LPVOID* ppResourceData, DWO
     return S_OK;
 }
 
-BSTR CUiMgr::GetXMLResource(int nId)
+BSTR CUiMgr::GetXmlResource(int nId)
 {
     LPVOID pResourceData = nullptr; DWORD dwSizeInBytes = 0;
     HRESULT hr = GetResource(nId, TEXT("XML"), &pResourceData, &dwSizeInBytes);
@@ -162,6 +262,11 @@ BSTR CUiMgr::GetXMLResource(int nId)
     // Assumes that the data is not stored in Unicode.
     CComBSTR cbstr(dwSizeInBytes, reinterpret_cast<LPCSTR>(pResourceData));
     return cbstr.Detach();
+}
+
+void CUiMgr::CaptureExcelMainHwnd()
+{
+    ::EnumThreadWindows(::GetCurrentThreadId(), EnumThreadHwnd, (LPARAM)&m_MainWnd);
 }
 
 BOOL __stdcall CUiMgr::EnumThreadHwnd(HWND hwnd, LPARAM lpParam)

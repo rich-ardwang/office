@@ -1,10 +1,19 @@
-// SumsAddin.h : Declaration of the CSumsAddin
+//
+//  SumsAddin.h
+//
+//  Created by Colin on 2020-03-02.
+//  Copyright (c) 2020 Sumscope. All rights reserved.
+//
 
 #pragma once
+#include <string>
 #include "resource.h"       // main symbols
 #include "Helios_i.h"
 #include "CApp.h"
+#include "CDoc.h"
 #include "CUiMgr.h"
+#include "lava_base.h"
+#include "lava_utils_api.h"
 
 #if defined(_WIN32_WCE) && !defined(_CE_DCOM) && !defined(_CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA)
 #error "Single-threaded COM objects are not properly supported on Windows CE platform, such as the Windows Mobile platforms that do not include full DCOM support. Define _CE_ALLOW_SINGLE_THREADED_OBJECTS_IN_MTA to force ATL to support creating single-thread COM object's and allow use of it's single-threaded COM object implementations. The threading model in your rgs file was set to 'Free' as that is the only threading model supported in non DCOM Windows CE platforms."
@@ -20,10 +29,8 @@ class ATL_NO_VTABLE CSumsAddin :
 	public IDispatchImpl<_IDTExtensibility2, &__uuidof(_IDTExtensibility2), &LIBID_AddInDesignerObjects, /* wMajor = */ 1, /* wMinor = */ 0>
 {
 public:
-	CSumsAddin() : m_pApp(nullptr)
-	{
-		s_pAddin = this;
-	}
+	CSumsAddin();
+	~CSumsAddin();
 
 	DECLARE_REGISTRY_RESOURCEID(IDR_SUMSADDIN)
 
@@ -46,6 +53,8 @@ public:
 
 	HRESULT FinalConstruct()
 	{
+		m_pDoc = new CDoc();
+
 		//
 		// here will increase m_dwRef of CComAggObj because of we hold m_pUnkDockbarMgr.
 		// Note: should not increase m_dwRef of outer-obj, otherwise we can not destroy 
@@ -60,6 +69,8 @@ public:
 		// destroy aggregation obj
 		m_pUnkUiMgr.Release();
 		s_pAddin = nullptr;
+
+		release_pointer(m_pDoc);
 	}
 
 	inline static CSumsAddin* GetAddin()
@@ -72,8 +83,23 @@ public:
 		return m_pApp;
 	}
 
+	inline CDoc* GetDoc()
+	{
+		return m_pDoc;
+	}
+
+	inline CComPtr<IUiMgr> GetUiMgr()
+	{
+		return CComQIPtr<IUiMgr>(m_pUnkUiMgr);
+	}
+
+	inline std::wstring GetModulePath()
+	{
+		return m_module_path;
+	}
+
 public:
-	inline static HRESULT __stdcall __This(void* pThis, REFIID riid, void** ppObj, DWORD dw)
+	inline static HRESULT WINAPI __This(void* pThis, REFIID riid, void** ppObj, DWORD_PTR dw)
 	{
 		*ppObj = pThis;
 		return S_OK;
@@ -95,8 +121,13 @@ private:
 	STDMETHOD(OnBeginShutdown)(SAFEARRAY** custom);
 
 private:
+	void InitModulePath();
+
+private:
 	static CSumsAddin* s_pAddin;
+	std::wstring m_module_path;
 	CApp* m_pApp;
+	CDoc* m_pDoc;
 
 	//
 	// Note: for outer-obj, it can only hold "non-delegate IUnknow" to 

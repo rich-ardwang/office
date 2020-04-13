@@ -7,4 +7,5 @@ EXPORTS
 	DllGetClassObject	PRIVATE
 	DllRegisterServer	PRIVATE
 	DllUnregisterServer	PRIVATE
-	DllInstall		PRIVATE
+	DllInstall			PRIVATE
+	SFunc				PRIVATE

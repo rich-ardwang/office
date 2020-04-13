@@ -1,7 +1,13 @@
+//
+//  CUiMgr.h
+//
+//  Created by Colin on 2020-03-03.
+//  Copyright (c) 2020 Sumscope. All rights reserved.
+//
 #pragma once
-#include "stdafx.h"
 #include "Helios_i.h"
 #include "helios_itf.h"
+#include "AddinMsgWnd.h"
 
 using namespace ATL;
 
@@ -30,7 +36,10 @@ private:
 	//
 	// IUiMgr
 	//
-	STDMETHOD_(void, CaptureExcelMainHwnd)();
+	STDMETHOD_(void, Initialize)();
+	STDMETHOD_(void, InvalidateControl)(__lv_in BSTR ctrlId);
+	STDMETHOD_(void, InvalidateControl)(__lv_in UINT ctrlId);
+	STDMETHOD_(void, PostCustomMessage)(__lv_in UINT Msg, __lv_in WPARAM wParam, __lv_in LPARAM lParam);
 
 	//
 	// IRibbonExtensibility Methods
@@ -57,10 +66,13 @@ private:
 	STDMETHOD_(VARIANT_BOOL, RbnGetShowLabel)(IDispatch* pDispCtrl);
 
 	HRESULT GetResource(int nId, LPCTSTR lpType, LPVOID* ppvResourceData, DWORD* pdwSizeInBytes);
-	BSTR GetXMLResource(int nId);
+	BSTR GetXmlResource(int nId);
+
+	void CaptureExcelMainHwnd();
 	static BOOL __stdcall EnumThreadHwnd(HWND hwnd, LPARAM lpParam);
 
 private:
 	CComQIPtr<IRibbonUI>	m_spRibbonUI;
 	HWND					m_MainWnd;
+	AddinMsgWnd				m_MsgWnd;
 };
