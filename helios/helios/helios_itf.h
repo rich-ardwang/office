@@ -41,9 +41,11 @@
 //		0x800AC472			VBA_E_IGNORE
 //
 
-#define WM_DATA_ARRIVED     WM_USER + 0x100
-#define WM_LOGIN			WM_USER + 0x101
-#define WM_LOGOUT           WM_USER + 0x102
+#define WM_LOGIN			WM_USER + 0x100
+#define WM_LOGOUT           WM_USER + 0x101
+#define WM_DATA_ARRIVED     WM_USER + 0x102
+#define WM_DATA_SEND		WM_USER + 0x103
+#define WM_REFRESH			WM_USER + 0x104
 
 struct DECLSPEC_UUID("DF1E18FC-45FD-4859-BB19-DC740D198FA6") IUiMgr : public IUnknown
 {

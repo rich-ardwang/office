@@ -1,9 +1,4 @@
-//
-//  CDoc.cpp
-//
-//  Created by Colin on 2020-03-05.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #include "stdafx.h"
 #include <fstream>
 #include "CDoc.h"
@@ -39,19 +34,24 @@ void CDoc::Initialzie()
         log_error(helios_module, "CDH client init failed!");
 
     loadConfig();
+    m_cliProxy->setAutoReconnect(m_confInfo.m_retryTimes, m_confInfo.m_retrySpan);
+    m_cliProxy->setTimeout(m_confInfo.m_timeout);
 
     //auto login CDH
     if (!m_is_login)
     {
         accoutInfo ac;
-        bool ret = GetUserAccount(ac);
-        if (ret)
+        int ret = GetUserAccount(ac);
+        if (0 == ret)
         {
-            ret = LoginCDH(ac);
-            if (ret)
-                m_is_login = true;
-            else
-                log_error(helios_module, "login CDH failed!");
+            if (TRUE == ac.m_autologin)
+            {
+                bool res = LoginCDH(ac);
+                if (res)
+                    m_is_login = true;
+                else
+                    log_error(helios_module, "auto login CDH failed!");
+            }
         }
     }
 }
@@ -163,37 +163,71 @@ CString CDoc::RegularSheetName(CString org_name)
 
 void CDoc::OnDataArrived()
 {
+    m_CalcEngine->OnDataArrived();
+}
 
+void CDoc::OnManualSend()
+{
+    m_CalcEngine->OnManualSend();
 }
 
 void CDoc::loadConfig()
 {
     // Config init
     lava::utils::i_lava_config* pConf = create_lava_config();
-    bool initFlg = false;
     if (pConf)
     {
-        initFlg = pConf->init();
+        bool initFlg = pConf->init();
         if (!initFlg)
+        {
             log_error(helios_module, "initial config failed!");
-        initFlg = true;
-        log_info(helios_module, "initial config complete.");
+            return;
+        }
+        else
+            log_info(helios_module, "initial config complete.");
     }
     else
+    {
         log_error(helios_module, "lava config create failed!");
+        return;
+    }
 
     char *conf_buf = nullptr; int conf_len = 0;
     pConf->value("gateway.addr", conf_buf, conf_len);
-    if (conf_buf && initFlg)
+    if ((conf_buf) && (conf_len > 0))
         m_confInfo.m_ip = conf_buf;
 
     std::string sPort;
     pConf->value("gateway.port", conf_buf, conf_len);
-    if (conf_buf && initFlg)
+    if ((conf_buf) && (conf_len > 0))
         sPort = conf_buf;
 
     if (!sPort.empty())
         m_confInfo.m_port = std::stoi(sPort);
+
+    std::string sTimeout;
+    pConf->value("gateway.timeout", conf_buf, conf_len);
+    if ((conf_buf) && (conf_len > 0))
+        sTimeout = conf_buf;
+
+    if (!sTimeout.empty())
+        m_confInfo.m_timeout = std::stoi(sTimeout);
+
+    std::string sRtyTimes;
+    pConf->value("gateway.reconnect.retryTimes", conf_buf, conf_len);
+    if ((conf_buf) && (conf_len > 0))
+        sRtyTimes = conf_buf;
+
+    if (!sRtyTimes.empty())
+        m_confInfo.m_retryTimes = std::stoi(sRtyTimes);
+
+    std::string sRtyTimeSpan;
+    pConf->value("gateway.reconnect.timeSpan", conf_buf, conf_len);
+    if ((conf_buf) && (conf_len > 0))
+        sRtyTimeSpan = conf_buf;
+
+    if (!sRtyTimeSpan.empty())
+        m_confInfo.m_retrySpan = std::stoi(sRtyTimeSpan);
 
     if (conf_buf)
     {
@@ -203,18 +237,22 @@ void CDoc::loadConfig()
     release_lava_config(pConf);
 }
 
-bool CDoc::GetUserAccount(accoutInfo &acInfo)
+int CDoc::GetUserAccount(accoutInfo &acInfo)
 {
-    bool ret = false;
+    int ret = -1;
     std::wstring filePath = CSumsAddin::GetAddin()->GetModulePath() + L"DT";
     std::ifstream in;
     in.open(filePath);
     if (!in.is_open())
+    {
+        log_error(helios_module, "[GetUserAccount]open DT file failed!");
         return ret;
+    }
 
     //read from file
     std::string b64User;
     std::string b64Pwd;
+    in >> acInfo.m_autologin;
     in >> b64User;
     in >> b64Pwd;
     in.close();
@@ -222,62 +260,126 @@ bool CDoc::GetUserAccount(accoutInfo &acInfo)
     //parse the info
     uint32_t lenUser = 0;
     uint32_t lenPwd = 0;
-    char *cUser = nullptr;
-    char *cPwd = nullptr;
-    cUser = (char *)base64_decode((uint8_t *)b64User.c_str(), lenUser);
-    cPwd = (char *)base64_decode((uint8_t *)b64Pwd.c_str(), lenPwd);
-    if ((lenUser > 0) && (lenPwd > 0))
+    uint8_t *cUser = nullptr;
+    uint8_t *cPwd = nullptr;
+    cUser = base64_decode((uint8_t *)b64User.c_str(), lenUser);
+    cPwd = base64_decode((uint8_t *)b64Pwd.c_str(), lenPwd);
+    if (cUser && lenUser > 0)
     {
-        std::string user(cUser, lenUser);
-        std::string pwdMd5(cPwd, lenPwd);
+        std::string user((char *)cUser, lenUser);
         acInfo.m_user = CA2T(user.c_str());
-        acInfo.m_password = CA2T(pwdMd5.c_str());
-        ret = true;
+        if (cPwd && lenPwd > 0)
+        {
+            std::string pwdMd5((char *)cPwd, lenPwd);
+            acInfo.m_password = CA2T(pwdMd5.c_str());
+            acInfo.m_storePwd = TRUE;
+            ret = 0;
+        }
+        else
+        {
+            ret = -3;
+            log_info(helios_module, "[GetUserAccount]emtpy user password.");
+        }
+    }
+    else
+    {
+        ret = -2;
+        log_info(helios_module, "[GetUserAccount]emtpy user name.");
     }
 
-    //release buf
-    if (cUser)
-    {
-        delete[] cUser;
-        cUser = nullptr;
-    }
-    if (cPwd)
-    {
-        delete[] cPwd;
-        cPwd = nullptr;
-    }
+    //release base64 result
+    if (cUser) { free_base64_result(cUser); }
+    if (cPwd) { free_base64_result(cPwd); }
+
     return ret;
 }
 
-bool CDoc::WriteUserAccount(const accoutInfo &acInfo)
+int CDoc::WriteUserAccount(const accoutInfo &acInfo)
 {
-    std::string u = CT2A(acInfo.m_user.GetString());
-    std::string p = CT2A(acInfo.m_password.GetString());
-    std::string usr = lava::utils::trim(u);
-    std::string pd = lava::utils::trim(p);
-
-    //base64 encryption
-    uint8_t *cypUser = base64_encode((uint8_t *)usr.c_str(), usr.length());
-    uint8_t *cypPwd = base64_encode((uint8_t *)pd.c_str(), pd.length());
-
+    int ret = -1;
     std::wstring filePath = CSumsAddin::GetAddin()->GetModulePath() + L"DT";
     std::ofstream out(filePath);
-    if (!out)
-        return false;
-    out << cypUser << " " << cypPwd << std::endl;
-    out.close();
-    return true;
+    if (out)
+    {
+        ret = 0;
+        out << acInfo.m_autologin;
+        std::string u = CT2A(acInfo.m_user.GetString());
+        std::string usr = lava::utils::trim(u);
+        uint8_t *cypUser = base64_encode((uint8_t *)usr.c_str(), usr.length());
+        if (cypUser && usr.length() > 0)
+        {
+            out << " " << cypUser;
+            if (acInfo.m_storePwd)
+            {
+                std::string p = CT2A(acInfo.m_password.GetString());
+                std::string pd = lava::utils::trim(p);
+                uint8_t *cypPwd = base64_encode((uint8_t *)pd.c_str(), pd.length());
+                if (cypPwd && pd.length() > 0)
+                    out << " " << cypPwd << std::endl;
+                else
+                {
+                    ret = -3;
+                    log_error(helios_module, "[WriteUserAccount]store user password failed!");
+                    out << std::endl;
+                }
+                if (cypPwd) { free_base64_result(cypPwd); }
+            }
+            else
+                out << std::endl;
+        }
+        else
+        {
+            ret = -2;
+            log_error(helios_module, "[WriteUserAccount]store user name failed!");
+            out << std::endl;
+        }
+        out.close();
+        if (cypUser) { free_base64_result(cypUser); }
+    }
+    else
+        log_error(helios_module, "[WriteUserAccount]open DT file failed!");
+
+    return ret;
 }
 
-bool CDoc::ClearUserAccount()
+int CDoc::GetGlobalConfigInfo(GlobalInfo& gbInfo)
 {
-    std::wstring filePath = CSumsAddin::GetAddin()->GetModulePath() + L"DT";
+    int ret = -1;
+    std::wstring filePath = CSumsAddin::GetAddin()->GetModulePath() + L"GlobalConfig";
+    std::ifstream in;
+    in.open(filePath);
+    if (!in.is_open())
+    {
+        log_error(helios_module, "[GetGlobalConfigInfo]open GlobalConfig file failed!");
+        return ret;
+    }
+
+    //read from file
+    in >> gbInfo.m_FreqSendInfo.m_defaultSendTimeSpan;
+    in >> gbInfo.m_FreqSendInfo.m_sendDataRightNow;
+    in.close();
+    ret = 0;
+
+    return ret;
+}
+
+int CDoc::WriteGlobalConfigInfo(const GlobalInfo &gbInfo)
+{
+    int ret = -1;
+    std::wstring filePath = CSumsAddin::GetAddin()->GetModulePath() + L"GlobalConfig";
     std::ofstream out(filePath);
-    if (!out)
-        return false;
-    out << "" << std::endl;
-    out.close();
-    return true;
+    if (out)
+    {
+        out << gbInfo.m_FreqSendInfo.m_defaultSendTimeSpan
+            << " " << gbInfo.m_FreqSendInfo.m_sendDataRightNow
+            <<std::endl;
+        out.close();
+        ret = 0;
+    }
+    else
+        log_error(helios_module, "[WriteGlobalConfigInfo]open GlobalConfig file failed!");
+
+    return ret;
 }
 
 bool CDoc::LoginCDH(const accoutInfo &acInfo)
@@ -286,9 +388,12 @@ bool CDoc::LoginCDH(const accoutInfo &acInfo)
     if (nullptr == m_cliProxy)
         return ret;
 
-    ret = m_cliProxy->Connect(m_confInfo.m_ip, m_confInfo.m_port);
-    if (!ret)
-        return ret;
+    if (!m_cliProxy->isConnected())
+    {
+        ret = m_cliProxy->Connect(m_confInfo.m_ip, m_confInfo.m_port);
+        if (!ret)
+            return ret;
+    }
 
     std::string usr = CT2A(acInfo.m_user.GetString());
     std::string pwd = CT2A(acInfo.m_password.GetString());

@@ -1,9 +1,4 @@
-//
-//  CApp.h
-//
-//  Created by Colin on 2020-03-02.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #pragma once
 #include "lava_base.h"
 #include "ConnHelper.h"
@@ -20,6 +15,7 @@ struct CallerInfo
 	long			Col;
 	long			Row;
 	CComPtr<Range>	Caller;
+	CComPtr<_Worksheet> Sheet;
 };
 
 class CApp : public AppEventSinker,

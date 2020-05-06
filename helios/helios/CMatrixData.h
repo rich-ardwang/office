@@ -1,9 +1,4 @@
-//
-//  CMatrixData.h
-//
-//  Created by Colin on 2020-03-06.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #pragma once
 #include <string>
 #include "lava_base.h"

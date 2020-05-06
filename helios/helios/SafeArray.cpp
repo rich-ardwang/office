@@ -1,9 +1,4 @@
-//
-//  SafeArray.cpp
-//
-//  Created by Colin on 2020-03-06.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #include "stdafx.h"
 #include "SafeArray.h"
 #include "lava_utils_api.h"

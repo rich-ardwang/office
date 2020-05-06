@@ -1,9 +1,4 @@
-//
-//  CUiMgr.h
-//
-//  Created by Colin on 2020-03-03.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #pragma once
 #include "Helios_i.h"
 #include "helios_itf.h"
@@ -69,10 +64,8 @@ private:
 	BSTR GetXmlResource(int nId);
 
 	void CaptureExcelMainHwnd();
-	static BOOL __stdcall EnumThreadHwnd(HWND hwnd, LPARAM lpParam);
 
 private:
 	CComQIPtr<IRibbonUI>	m_spRibbonUI;
-	HWND					m_MainWnd;
 	AddinMsgWnd				m_MsgWnd;
 };

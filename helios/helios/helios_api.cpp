@@ -1,9 +1,4 @@
-//
-//  helios_api.cpp
-//
-//  Created by Colin on 2020-03-08.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #include "stdafx.h"
 #include "SumsAddin.h"
 

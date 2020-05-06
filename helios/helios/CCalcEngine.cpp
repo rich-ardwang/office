@@ -26,9 +26,14 @@ CComVariant CCalcEngine::SingleCalc(char* func_name, CodeType code_type, long& p
 		return CComVariant("Null");
 }
 
-void CCalcEngine::OnCalculate()
+void CCalcEngine::OnCalculate(__lv_in IDispatch* Sh)
 {
-	m_ScContribHandler->OnCalculate();
+	m_ScContribHandler->OnCalculate(Sh);
+}
+
+void CCalcEngine::OnSheetChange(__lv_in IDispatch* Sh, __lv_in struct Range* Target)
+{
+	m_ScContribHandler->OnSheetChange(Sh, Target);
 }
 
 void CCalcEngine::OnAfterCalculate()
@@ -39,4 +44,14 @@ void CCalcEngine::OnAfterCalculate()
 void CCalcEngine::OnStopCalculate()
 {
 	m_ScContribHandler->OnStopCalculate();
+}
+
+void CCalcEngine::OnDataArrived()
+{
+
+}
+
+void CCalcEngine::OnManualSend()
+{
+	m_ScContribHandler->OnManualSend();
 }

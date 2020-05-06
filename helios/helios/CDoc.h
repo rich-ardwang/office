@@ -1,9 +1,4 @@
-//
-//  CDoc.h
-//
-//  Created by Colin on 2020-03-05.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #pragma once
 #include <string>
 #include "lava_base.h"
@@ -17,19 +12,41 @@ typedef struct acc
 {
     CString   m_user;
     CString   m_password;
+    int       m_storePwd;
+    int       m_autologin;
 
     acc() : m_user(_T("")),
-            m_password(_T("")) {}
+            m_password(_T("")),
+            m_storePwd(0),
+            m_autologin(0) {}
 } accoutInfo;
 
 typedef struct conf
 {
     std::string     m_ip;
     int             m_port;
+    int             m_timeout;
+    int             m_retryTimes;
+    int             m_retrySpan;
 
     conf() : m_ip("127.0.0.1"),
-             m_port(20480) {}
+             m_port(20480),
+             m_timeout(5),
+             m_retryTimes(5),
+             m_retrySpan(3) {}
 } confInfo;
+
+typedef struct tagGlobalInfo
+{
+    typedef struct tagFreqSendInfo
+    {
+        int     m_defaultSendTimeSpan;
+        bool    m_sendDataRightNow;
+        tagFreqSendInfo() : m_defaultSendTimeSpan(60), m_sendDataRightNow(false) {}
+    } FreqSendInfo;
+
+    FreqSendInfo   m_FreqSendInfo;
+} GlobalInfo;
 
 class CDoc
 {
@@ -50,10 +67,14 @@ public:
 
 	ATL::CComVariant SingleCalc(char* func_name, CCalcEngine::CodeType code_type, long& param_count, ATL::CComVariant** params);
 
-	inline void OnCalculate()
+	inline void OnCalculate(__lv_in IDispatch* Sh)
 	{
-		m_CalcEngine->OnCalculate();
+		m_CalcEngine->OnCalculate(Sh);
 	}
+    inline void OnSheetChange(__lv_in IDispatch* Sh, __lv_in struct Range* Target)
+    {
+        m_CalcEngine->OnSheetChange(Sh, Target);
+    }
 	inline void CDoc::OnAfterCalculate()
 	{
 		m_CalcEngine->OnAfterCalculate();
@@ -62,11 +83,13 @@ public:
 	BOOL OpenWorkBook(BSTR file_name, _Workbook**);
 	CComPtr<_Worksheet> AddNewSheet();
 	CComPtr<_Worksheet> AddNewSheet(__lv_in CString name);
+    void OnManualSend();
 
 public:
-    bool GetUserAccount(accoutInfo &acInfo);
-    bool WriteUserAccount(const accoutInfo &acInfo);
-    bool ClearUserAccount();
+    int GetUserAccount(accoutInfo &acInfo);
+    int WriteUserAccount(const accoutInfo &acInfo);
+    int GetGlobalConfigInfo(GlobalInfo &gbInfo);
+    int WriteGlobalConfigInfo(const GlobalInfo &gbInfo);
     bool LoginCDH(const accoutInfo &acInfo);
     CDHClient* GetCDHClient();
 
@@ -78,6 +101,7 @@ private:
 private:
 	bool            m_is_login;
     confInfo        m_confInfo;
+    GlobalInfo      m_globalInfo;
     CDHClient*      m_cliProxy;
 	std::shared_ptr<CCalcEngine>	m_CalcEngine;
 };

@@ -1,72 +1,33 @@
+
 #include "stdafx.h"
 #include "resource.h"
 #include "SumsAddin.h"
 #include "SafeArray.h"
 #include "ScContribFormula.h"
 #include "lava_conv.h"
-#include "CStrHash.h"
+#include "lava_crt.h"
 #include <thread>
 #include <algorithm>
 #include <regex>
 
-#define CDH_FUNCTION_CODE               1005
-
 using namespace Helios;
 using namespace ATL;
+using namespace lava::utils;
 
-ScContribFormula::ScContribFormula() : m_prev_sent(true)
-{
-
-}
-
-ScContribFormula::~ScContribFormula()
-{
-
-}
-
-void ScContribFormula::OnCalculate()
+void ScContribFormula::OnCalculate(__lv_in IDispatch* Sh)
 {	
 	// WARNING: here cannot call get_Caller()
+	//std::this_thread::sleep_for(std::chrono::milliseconds(200));
+	bool ret1 = m_cond_changed_formula.SendData(Sh);
+	bool ret2 = m_cond_freq_formula.SendData(Sh);
+	if ( ret1 || ret2 )
+		CSumsAddin::GetAddin()->GetUiMgr()->PostCustomMessage(WM_REFRESH, 0, 0);
+}
 
-	int count = m_data_to_send.size();
-	if ( count > 1 )
-	{
-		// Send data to server
-		bool cur_ret = CSumsAddin::GetAddin()->GetDoc()->GetCDHClient()->sendData(CDH_FUNCTION_CODE, m_data_to_send);
-
-		//
-		// Success: Clear data after sending.
-		// Failed:  Keep data, set hash data to false.
-		//
-		for (auto it = m_data_to_send.begin(); it != m_data_to_send.end(); it++)
-			m_hash_data[it->hash_val] = cur_ret;
-
-		if (cur_ret)
-			m_data_to_send.clear();
-		
-		bool prev_sent = m_prev_sent;
-		m_prev_sent = cur_ret;
-		if ( prev_sent || cur_ret )
-			CSumsAddin::GetAddin()->GetApp()->CalculateFull();
-	}
-	else if (count == 1)
-	{
-		// Send data to server
-		bool cur_ret = CSumsAddin::GetAddin()->GetDoc()->GetCDHClient()->sendData(CDH_FUNCTION_CODE, m_data_to_send);
-
-		//
-		// Success: Clear data after sending.
-		// Failed:  Keep data, set hash data to false.
-		//
-		m_hash_data[m_data_to_send[0].hash_val] = cur_ret;
-		if (cur_ret)
-			m_data_to_send.clear();
-
-		bool prev_sent = m_prev_sent;
-		m_prev_sent = cur_ret;
-		if ( prev_sent || cur_ret )
-			CSumsAddin::GetAddin()->GetApp()->RefreshSingle(m_single_cell);
-	}
+void ScContribFormula::OnSheetChange(__lv_in IDispatch* Sh, __lv_in struct Range* Target)
+{
+	m_cond_changed_formula.SheetChange(Sh, Target);
+	m_cond_freq_formula.SheetChange(Sh, Target);
 }
 
 void ScContribFormula::OnAfterCalculate()
@@ -77,6 +38,11 @@ void ScContribFormula::OnAfterCalculate()
 void ScContribFormula::OnStopCalculate()
 {
 
+}
+
+void ScContribFormula::OnManualSend()
+{
+	m_cond_changed_formula.ManualSend();
 }
 
 CComVariant ScContribFormula::Calc(long& param_count, CComVariant** params)
@@ -98,8 +64,8 @@ CComVariant ScContribFormula::Calc(long& param_count, CComVariant** params)
 	LAVA_USES_CONVERSION_EX;
 	std::string asset_class = WCHAR_TO_UTF8_EX(params[0]->bstrVal);
 
-	// Standardize mode
-	std::string mode = standard_mode(WCHAR_TO_UTF8_EX(params[1]->bstrVal));
+	// Check mode
+	std::string mode = check_mode(WCHAR_TO_UTF8_EX(params[1]->bstrVal));
 	if (mode.empty())
 	{
 		CString str;
@@ -107,12 +73,13 @@ CComVariant ScContribFormula::Calc(long& param_count, CComVariant** params)
 		return CComVariant(str);
 	}
 
-	// Standardize format
-	std::string format = standard_format(WCHAR_TO_UTF8_EX(params[4]->bstrVal));
-	if (format.empty())
+	// Standardize condition
+	CONDITION condition = {um_none, "", 0};
+	bool ret = parse_condition(WCHAR_TO_UTF8_EX(params[4]->bstrVal), condition);
+	if ( false == ret )
 	{
 		CString str;
-		str.LoadString(IDS_SCCONTRIB_FORMAT_ERROR);
+		str.LoadString(IDS_SCCONTRIB_COND_ERROR);
 		return CComVariant(str);
 	}
 
@@ -163,56 +130,13 @@ CComVariant ScContribFormula::Calc(long& param_count, CComVariant** params)
 	}
 
 	int cols = std::min<int>(fids.size(),vals.size());
-	return CacheFormula(asset_class, mode, format, fids, vals, cols);
-}
-
-CComVariant ScContribFormula::CacheFormula(std::string& asset_class, std::string& mode, std::string& format, 
-	std::vector<std::string>& fids, std::vector<double>& vals, int count)
-{
-	std::string hash_str = asset_class + mode + format;
-	for (int i = 0; i < count; i++)
-	{
-		hash_str += fids[i];
-
-		char val[_min_path] = { 0 };
-		sprintf_s(val, format.c_str(), vals[i]);
-		hash_str += val;
-	}
-
-	uint32_t hash_val = CStrHash::BKDRHash(hash_str.c_str());
-	auto it = m_hash_data.find(hash_val);
-	if ( it == m_hash_data.end() )
-	{
-		ScContribData data = { asset_class, std::pair<uint32_t, std::string>(20138, mode) };
-		std::copy(fids.begin(), fids.begin() + count, std::back_inserter(data.fids));
-		std::copy(vals.begin(), vals.begin() + count, std::back_inserter(data.vals));
-		data.hash_val = hash_val;
-		m_data_to_send.push_back(data);
-
-		m_hash_data[hash_val] = false; // no send.
-
-		CallerInfo info;
-		CSumsAddin::GetAddin()->GetApp()->get_CallerInfo(&info);
-		m_single_cell = info.Caller;
-		CELL_POS pos = { info.Col, info.Row };
-		auto it = m_pos_hash.find(pos);
-		if (it != m_pos_hash.end())
-			m_hash_data.erase(it->second);
-		m_pos_hash[pos] = hash_val;
-
-		CString str;
-		str.LoadString(IDS_SCCONTRIB_SEND_DATA);
-		return CComVariant(str);
-	}
+	if (condition.m_upload_mode == um_changed)
+		return m_cond_changed_formula.CacheFormula(asset_class, mode, condition.m_ft, fids, vals, cols);
 	else
-	{
-		CString str;
-		str.LoadString(it->second ? IDS_FINISHED : IDS_SCCONTRIB_SEND_FAILED);
-		return CComVariant(str);
-	}
+		return m_cond_freq_formula.CacheFormula(asset_class, mode, condition.m_fq, fids, vals, cols);
 }
 
-std::string ScContribFormula::standard_mode(std::string str)
+std::string ScContribFormula::check_mode(std::string str)
 {
 	if ( str.find("=") == std::string::npos )
 		return std::string("");
@@ -220,23 +144,52 @@ std::string ScContribFormula::standard_mode(std::string str)
 	return /*std::string("20138=") + */str;
 }
 
-std::string ScContribFormula::standard_format(std::string str)
+bool ScContribFormula::parse_condition(std::string str, CONDITION& ret)
 {
-	int pos = str.find("FORMAT");
-	if ( pos == std::string::npos )
-		return std::string("");
-
-	std::regex reg("[0-9]+\\.[0-9]+");
-	std::smatch smat;
-	if ( std::regex_search(str, smat, reg) )
-		return std::string("%") + smat.str() + "f";
-
-	reg = "[0-9]+:[0-9]+";
-	if ( std::regex_search(str, smat, reg) )
+	std::vector<std::string> pairs;
+	lava::utils::split(str.c_str(), " ", pairs);
+	for (auto val : pairs)
 	{
-		std::string ret = smat.str();
-		ret.replace(ret.find(':'), 1, 1, '.');
-		return std::string("%") + ret + "f";
+		std::vector<std::string> key_value;
+		lava::utils::split(val.c_str(), "=", key_value);
+		if ( 2 != key_value.size() )
+			return false;
+
+		// convert characters(key and value) to lower case
+		transform(key_value[0].begin(), key_value[0].end(), key_value[0].begin(), ::tolower);
+		transform(key_value[1].begin(), key_value[1].end(), key_value[1].begin(), ::tolower);
+
+		if ( 0 == key_value[0].compare("upload") )
+		{
+			ret.m_upload_mode = key_value[1].compare("changed") == 0 ? um_changed :
+								key_value[1].compare("frequency") == 0 ? um_frequency : um_none;
+			if ( ret.m_upload_mode == um_none )
+				return false;
+		}
+		else if ( key_value[0].compare("ft") == 0 )
+		{
+			std::regex reg("[0-9]+\\.[0-9]+");
+			std::smatch smat;
+			if (std::regex_search(key_value[1], smat, reg))
+				ret.m_ft = std::string("%") + smat.str() + "f";
+			else
+				return false;
+		}
+		else if ( key_value[0].compare("fq") == 0 )
+		{
+			std::regex reg("[0-9]+[s|m|h]");
+			std::smatch smat;
+			if (std::regex_search(key_value[1], smat, reg))
+			{
+				std::string value = smat.str();
+				int count = value.size();
+				int prefix = atoi(value.substr(0, count - 1).c_str());
+				int suffix = value[count-1];
+				ret.m_fq = (suffix == 's') ? prefix : (suffix == 'm') ? prefix * 60 : (suffix == 'h') ? prefix * 3600 : 0;
+			}
+			else
+				return false;
+		}
 	}
-	return std::string("");
+	return true;
 }

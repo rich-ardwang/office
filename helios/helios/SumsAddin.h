@@ -1,9 +1,3 @@
-//
-//  SumsAddin.h
-//
-//  Created by Colin on 2020-03-02.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
 
 #pragma once
 #include <string>

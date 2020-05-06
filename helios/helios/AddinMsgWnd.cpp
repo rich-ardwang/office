@@ -25,3 +25,9 @@ LRESULT AddinMsgWnd::OnLogOut(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL&
 	CSumsAddin::GetAddin()->GetUiMgr()->InvalidateControl(_T("LoginButton"));
 	return 0;
 }
+
+LRESULT AddinMsgWnd::OnRefresh(UINT /*uMsg*/, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
+{
+	CSumsAddin::GetAddin()->GetApp()->CalculateFull();
+	return 0;
+}

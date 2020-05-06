@@ -1,9 +1,4 @@
-//
-//  CApp.cpp
-//
-//  Created by Colin on 2020-03-02.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #include "stdafx.h"
 #include "CApp.h"
 #include "SumsAddin.h"
@@ -63,7 +58,8 @@ BOOL CApp::get_CallerInfo(CallerInfo* info)
 		info->SheetName = (wchar_t*)sheet->GetName();
 		info->Row = spRange->GetRow();
 		info->Col = spRange->GetColumn();
-		info->Caller = spRange;
+		info->Caller.Attach(spRange.Detach());
+		info->Sheet.Attach(sheet.Detach());
 		return TRUE;
 	}
 	return FALSE;
@@ -92,56 +88,51 @@ void CApp::RefreshSingle(Range* lpDisp)
 
 void __stdcall CApp::OnSheetSelectionChange(__lv_in IDispatch* Sh, __lv_in Range* Target)
 {
-	log_info(helios_module, "Enter OnSheetSelectionChange");
-	log_info(helios_module, "Leave OnSheetSelectionChange");
+	//log_info(helios_module, "Enter OnSheetSelectionChange");
+	//log_info(helios_module, "Leave OnSheetSelectionChange");
 }
 
 void __stdcall CApp::OnSheetBeforeDoubleClick(__lv_in IDispatch* Sh, __lv_in struct Range* Target, __lv_inout VARIANT_BOOL* Cancel)
 {
-	log_info(helios_module, "Enter OnSheetBeforeDoubleClick");
-	log_info(helios_module, "Leave OnSheetBeforeDoubleClick");
+	//log_info(helios_module, "Enter OnSheetBeforeDoubleClick");
+	//log_info(helios_module, "Leave OnSheetBeforeDoubleClick");
 }
 
 void __stdcall CApp::OnSheetBeforeRightClick(__lv_in IDispatch* Sh, __lv_in struct Range* Target, __lv_inout VARIANT_BOOL* Cancel)
 {
-	log_info(helios_module, "Enter OnSheetBeforeRightClick");
-	log_info(helios_module, "Leave OnSheetBeforeRightClick");
+	//log_info(helios_module, "Enter OnSheetBeforeRightClick");
+	//log_info(helios_module, "Leave OnSheetBeforeRightClick");
 }
 
 void __stdcall CApp::OnSheetActivate(__lv_in IDispatch* Sh)
 {
-	log_info(helios_module, "Enter OnSheetActivate");
-	log_info(helios_module, "Leave OnSheetActivate");
+	//log_info(helios_module, "Enter OnSheetActivate");
+	//log_info(helios_module, "Leave OnSheetActivate");
 }
 
 void __stdcall CApp::OnSheetDeactivate(__lv_in IDispatch* Sh)
 {
-	log_info(helios_module, "Enter OnSheetDeactivate");
-	log_info(helios_module, "Leave OnSheetDeactivate");
+	//log_info(helios_module, "Enter OnSheetDeactivate");
+	//log_info(helios_module, "Leave OnSheetDeactivate");
 }
 
 void __stdcall CApp::OnSheetCalculate(__lv_in IDispatch* Sh)
 {
-	log_info(helios_module, "Enter OnSheetCalculate");
-	CSumsAddin::GetAddin()->GetDoc()->OnCalculate();
-	log_info(helios_module, "Leave OnSheetCalculate");
+	CSumsAddin::GetAddin()->GetDoc()->OnCalculate(Sh);
 }
 
 void __stdcall CApp::OnSheetChange(__lv_in IDispatch* Sh, __lv_in struct Range* Target)
 {
-	log_info(helios_module, "Enter OnSheetChange");
-	log_info(helios_module, "Leave OnSheetChange");
+	CSumsAddin::GetAddin()->GetDoc()->OnSheetChange(Sh, Target);
 }
 
 void __stdcall CApp::OnNewWorkbook(__lv_in _Workbook* Wb)
 {
-	log_info(helios_module, "Enter OnNewWorkbook");
-	log_info(helios_module, "Leave OnNewWorkbook");
+	//log_info(helios_module, "Enter OnNewWorkbook");
+	//log_info(helios_module, "Leave OnNewWorkbook");
 }
 
 void __stdcall CApp::OnAfterCalculate()
 {
-	log_info(helios_module, "Enter OnAfterCalculate");
 	CSumsAddin::GetAddin()->GetDoc()->OnAfterCalculate();
-	log_info(helios_module, "Leave OnAfterCalculate");
 }

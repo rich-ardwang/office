@@ -248,6 +248,9 @@
     <ClCompile Include="cdh_client.cpp" />
     <ClCompile Include="CDoc.cpp" />
     <ClCompile Include="CMatrixData.cpp" />
+    <ClCompile Include="ConfigDlg.cpp" />
+    <ClCompile Include="CondChangedFormula.cpp" />
+    <ClCompile Include="CondFreqFormula.cpp" />
     <ClCompile Include="CStrHash.cpp" />
     <ClCompile Include="CUiMgr.cpp" />
     <ClCompile Include="dllmain.cpp">
@@ -312,6 +315,10 @@
     <ClInclude Include="cdh_client.h" />
     <ClInclude Include="CDoc.h" />
     <ClInclude Include="CMatrixData.h" />
+    <ClInclude Include="ConfigDlg.h" />
+    <ClInclude Include="CondChangedFormula.h" />
+    <ClInclude Include="CondFreqFormula.h" />
+    <ClInclude Include="ConditionFormula.h" />
     <ClInclude Include="ConnHelper.h" />
     <ClInclude Include="CStrHash.h" />
     <ClInclude Include="CUiMgr.h" />
@@ -342,8 +349,10 @@
     <Midl Include="Helios.idl" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="config.bmp" />
     <Image Include="login.bmp" />
     <Image Include="logout.bmp" />
+    <Image Include="man_send.bmp" />
     <Xml Include="ribbon.xml" />
     <Image Include="icon_main.ico" />
   </ItemGroup>

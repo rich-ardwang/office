@@ -2,11 +2,15 @@
 <customUI xmlns="http://schemas.microsoft.com/office/2006/01/customui" onLoad="RbnOnLoad" loadImage="RbnLoadImage">
 	<ribbon>
 		<tabs>
-			<tab id="CustomTab" label="Sumscoope">
-        <group idMso="GroupClipboard"/>
-        <group idMso="GroupFont"/>
+			<tab id="CustomTab" label="Sumscope">
+        <!--group idMso="GroupClipboard"/-->
+        <!--group idMso="GroupFont"/-->
         <!--group idMso="GroupFormulaAuditing"/-->
-				<group id="CustomGroup" label="辅助功能">
+        <group id="SumscopeDataMarket" label="数据集市">
+          <button id="ManSendButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage"/>
+        </group>
+				<group id="SumscopeAuxiliary" label="辅助功能">
+          <button id="ConfigButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage"/>
 					<button id="LoginButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage"/>
 				</group>
 			</tab>

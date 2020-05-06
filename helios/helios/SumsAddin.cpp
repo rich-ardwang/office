@@ -1,9 +1,4 @@
-//
-//  SumsAddin.cpp
-//
-//  Created by Colin on 2020-03-02.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #include "stdafx.h"
 #include "SumsAddin.h"
 

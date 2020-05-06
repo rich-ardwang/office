@@ -1,16 +1,31 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="AddinMsgWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="CApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CCalcEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="cdh_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="CDoc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CMatrixData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CondChangedFormula.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CondFreqFormula.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CStrHash.cpp">
@@ -28,13 +43,13 @@
     <ClCompile Include="helios_api.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Helios_i.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LoginDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SafeArray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScContribFormula.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
@@ -46,27 +61,39 @@
     <ClCompile Include="xdlldata.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ScContribFormula.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="cdh_client.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AddinMsgWnd.cpp">
+    <ClCompile Include="Helios_i.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AddinMsgWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="CApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CCalcEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cdh_client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="CDoc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CMatrixData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CondChangedFormula.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CondFreqFormula.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConditionFormula.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ConnHelper.h">
@@ -81,19 +108,16 @@
     <ClInclude Include="dllmain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Helios_i.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helios_itf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LoginDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
+    <ClInclude Include="SafeArray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SafeArray.h">
+    <ClInclude Include="ScContribFormula.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -108,22 +132,29 @@
     <ClInclude Include="xdlldata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ScContribFormula.h">
+    <ClInclude Include="Helios_i.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cdh_client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AddinMsgWnd.h">
+    <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <Image Include="config.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
     <Image Include="icon_main.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="login.bmp" />
-    <Image Include="logout.bmp" />
+    <Image Include="login.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="logout.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="man_send.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="Helios.def">
@@ -141,13 +172,13 @@
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{fdb614c2-8fe2-4089-acac-4672c59fa5cf}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{ab1d83a6-29a8-4a24-b616-77bde59e0d26}</UniqueIdentifier>
+      <UniqueIdentifier>{b90dbecd-10fa-451f-a93a-3adc4cb077b9}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{640b196a-d23a-4718-a598-fe1414e53195}</UniqueIdentifier>
+      <UniqueIdentifier>{22e81d9f-bbfb-460b-b3bf-ac490aeab610}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{e5647989-f612-4c32-a386-244e3c3996c0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -156,13 +187,13 @@
     </Midl>
   </ItemGroup>
   <ItemGroup>
-    <Xml Include="ribbon.xml">
-      <Filter>Resource Files</Filter>
-    </Xml>
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="Helios.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="ribbon.xml">
+      <Filter>Resource Files</Filter>
+    </Xml>
   </ItemGroup>
 </Project>

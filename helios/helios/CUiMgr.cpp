@@ -1,14 +1,10 @@
-//
-//  CUiMgr.cpp
-//
-//  Created by Colin on 2020-03-03.
-//  Copyright (c) 2020 Sumscope. All rights reserved.
-//
+
 #include "stdafx.h"
 #include "resource.h"
 #include "SumsAddin.h"
 #include "CUiMgr.h"
 #include "LoginDlg.h"
+#include "ConfigDlg.h"
 #include "lava_utils_api.h"
 
 
@@ -31,7 +27,7 @@ STDMETHODIMP CUiMgr::InterfaceSupportsErrorInfo(REFIID riid)
 STDMETHODIMP_(void) CUiMgr::Initialize()
 {
     CaptureExcelMainHwnd();
-    m_MsgWnd.Initialize(m_MainWnd);
+    m_MsgWnd.Initialize(0);
 }
 
 //
@@ -84,9 +80,15 @@ STDMETHODIMP CUiMgr::RbnOnBtnClick(IDispatch* pDispCtrl)
         dlg.DoModal();
         InvalidateControl(_T("LoginButton"));
     }
-    else if (ctrl_id == _T(""))
+    else if (ctrl_id == _T("ConfigButton"))
     {
-
+        CConfigDlg dlg;
+        dlg.DoModal();
+        InvalidateControl(_T("ConfigButton"));
+    }
+    else if (ctrl_id == _T("ManSendButton"))
+    {
+        CSumsAddin::GetAddin()->GetDoc()->OnManualSend();
     }
     return S_OK;
 }
@@ -122,9 +124,9 @@ STDMETHODIMP_(IPictureDisp*) CUiMgr::RbnGetImage(IDispatch* pDispCtrl)
     {
         UINT imageId = 0;
         if (CSumsAddin::GetAddin()->GetDoc()->GetLoginResult())
-            imageId = IDB_BITMAP_LOGIN;
-        else
             imageId = IDB_BITMAP_LOGOUT;
+        else
+            imageId = IDB_BITMAP_LOGIN;
 
         HBITMAP hBitmap = (HBITMAP)::LoadImage(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(imageId),
             IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTCOLOR);
@@ -133,13 +135,37 @@ STDMETHODIMP_(IPictureDisp*) CUiMgr::RbnGetImage(IDispatch* pDispCtrl)
         pictdesc.picType = PICTYPE_BITMAP;
         pictdesc.bmp.hbitmap = hBitmap;
         pictdesc.bmp.hpal = NULL;
-
         IPictureDisp* pReturn = nullptr;
         ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
         return pReturn;
     }
-    else if (ctrl_id == _T(""))
+    else if (ctrl_id == _T("ConfigButton"))
     {
+        UINT imageId = IDB_BITMAP_CONFIG;
+        HBITMAP hBitmap = (HBITMAP)::LoadImage(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(imageId),
+            IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTCOLOR);
+        PICTDESC pictdesc = { 0 };
+        pictdesc.cbSizeofstruct = sizeof(PICTDESC);
+        pictdesc.picType = PICTYPE_BITMAP;
+        pictdesc.bmp.hbitmap = hBitmap;
+        pictdesc.bmp.hpal = NULL;
+        IPictureDisp* pReturn = nullptr;
+        ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
+        return pReturn;
+    }
+    else if (ctrl_id == _T("ManSendButton"))
+    {
+        UINT imageId = IDB_BITMAP_MANSEND;
+        HBITMAP hBitmap = (HBITMAP)::LoadImage(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(imageId),
+            IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTCOLOR);
+        PICTDESC pictdesc = { 0 };
+        pictdesc.cbSizeofstruct = sizeof(PICTDESC);
+        pictdesc.picType = PICTYPE_BITMAP;
+        pictdesc.bmp.hbitmap = hBitmap;
+        pictdesc.bmp.hpal = NULL;
+        IPictureDisp* pReturn = nullptr;
+        ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
+        return pReturn;
     }
     return nullptr;
 }
@@ -178,9 +204,19 @@ STDMETHODIMP_(BSTR) CUiMgr::RbnGetLabel(IDispatch* pDispCtrl)
             return label.Detach();
         }
     }
-    else if (ctrl_id == _T(""))
+    else if (ctrl_id == _T("ConfigButton"))
     {
-
+        CString str;
+        str.LoadString(IDS_GLOBAL_CONFIG);
+        CComBSTR label(str);
+        return label.Detach();
+    }
+    else if (ctrl_id == _T("ManSendButton"))
+    {
+        CString str;
+        str.LoadString(IDS_MAN_SEND);
+        CComBSTR label(str);
+        return label.Detach();
     }
     return nullptr;
 }
@@ -266,17 +302,17 @@ BSTR CUiMgr::GetXmlResource(int nId)
 
 void CUiMgr::CaptureExcelMainHwnd()
 {
-    ::EnumThreadWindows(::GetCurrentThreadId(), EnumThreadHwnd, (LPARAM)&m_MainWnd);
+    //::EnumThreadWindows(::GetCurrentThreadId(), EnumThreadHwnd, (LPARAM)&m_MainWnd);
 }
 
-BOOL __stdcall CUiMgr::EnumThreadHwnd(HWND hwnd, LPARAM lpParam)
-{
-    char class_name[256] = {0};
-    ::GetClassNameA(hwnd, class_name, 256);
-    if (0 == _stricmp(class_name, "XLMAIN"))
-    {
-        *(HWND*)lpParam = hwnd;
-        return FALSE; // stop enum
-    }
-    return TRUE; // continue enum
-}
+//BOOL __stdcall CUiMgr::EnumThreadHwnd(HWND hwnd, LPARAM lpParam)
+//{
+//    char class_name[256] = {0};
+//    ::GetClassNameA(hwnd, class_name, 256);
+//    if (0 == _stricmp(class_name, "XLMAIN"))
+//    {
+//        *(HWND*)lpParam = hwnd;
+//        return FALSE; // stop enum
+//    }
+//    return TRUE; // continue enum
+//}

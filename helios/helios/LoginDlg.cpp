@@ -4,7 +4,7 @@
 #include "lava_crt.h"
 #include "LoginDlg.h"
 
-#define FAKE_USER_PASSWORD              _T("********")
+#define HELIOS_FAKE_USER_PASSWORD              _T("********")
 
 LRESULT CLoginDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, BOOL& /*bHandled*/)
 {
@@ -30,15 +30,27 @@ LRESULT CLoginDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lPara
     m_editPwd.SetPasswordChar(_T('*'));
 
     // get user account info
-    bool ret = CSumsAddin::GetAddin()->GetDoc()->GetUserAccount(m_ac);
-    if (ret)
+    int ret = CSumsAddin::GetAddin()->GetDoc()->GetUserAccount(m_ac);
+    if (0 == ret)
     {
         m_editUser.SetWindowTextW(m_ac.m_user);
-        m_editPwd.SetWindowTextW(FAKE_USER_PASSWORD);
-        ((CButton)GetDlgItem(IDC_CHECK_ACCOUNT_STORE)).SetCheck(TRUE);
+        m_editPwd.SetWindowTextW(HELIOS_FAKE_USER_PASSWORD);
+        ((CButton)GetDlgItem(IDC_CHECK_PWD_STORE)).SetCheck(TRUE);
+    }
+    else if (-3 == ret)
+    {
+        m_editUser.SetWindowTextW(m_ac.m_user);
+        m_editPwd.SetWindowTextW(_T(""));
+        ((CButton)GetDlgItem(IDC_CHECK_PWD_STORE)).SetCheck(FALSE);
     }
     else
-        ((CButton)GetDlgItem(IDC_CHECK_ACCOUNT_STORE)).SetCheck(FALSE);
+    {
+        m_editUser.SetWindowTextW(_T(""));
+        m_editPwd.SetWindowTextW(_T(""));
+        ((CButton)GetDlgItem(IDC_CHECK_PWD_STORE)).SetCheck(FALSE);
+    }
+
+    ((CButton)GetDlgItem(IDC_CHECK_AUTO_LOGIN)).SetCheck(m_ac.m_autologin);
 
     return TRUE;
 }
@@ -69,12 +81,28 @@ LRESULT CLoginDlg::OnOK(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& 
     CString pwd = _T("");
     m_editUser.GetWindowTextW(user);
     m_editPwd.GetWindowTextW(pwd);
+    int autologin = ((CButton)GetDlgItem(IDC_CHECK_AUTO_LOGIN)).GetCheck();
+    int storePwd = ((CButton)GetDlgItem(IDC_CHECK_PWD_STORE)).GetCheck();
 
-    if ((m_ac.m_user == user) && (FAKE_USER_PASSWORD == pwd))
+    if ((m_ac.m_user == user) && (HELIOS_FAKE_USER_PASSWORD == pwd))
     {
         // do nothing
         if (CSumsAddin::GetAddin()->GetDoc()->GetLoginResult())
         {
+            if ((m_ac.m_autologin != autologin) || (m_ac.m_storePwd != storePwd))
+            {
+                m_ac.m_autologin = autologin;
+                m_ac.m_storePwd = storePwd;
+                int ret = CSumsAddin::GetAddin()->GetDoc()->WriteUserAccount(m_ac);
+                if (0 != ret)
+                {
+                    ::MessageBox(this->m_hWnd, L"Store flag failed!", L"Login Error", MB_ICONEXCLAMATION);
+                    return 0;
+                }
+                ::MessageBox(this->m_hWnd, L"Setting success.", L"MessageBox", MB_OK);
+                CloseDialog(wID);
+                return 0;
+            }
             ::MessageBox(this->m_hWnd, L"Already login.", L"MessageBox", MB_OK);
             CloseDialog(wID);
             return 0;
@@ -105,7 +133,7 @@ LRESULT CLoginDlg::OnOK(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& 
 
     // get user account info
     m_ac.m_user = user;
-    if (FAKE_USER_PASSWORD != pwd)
+    if (HELIOS_FAKE_USER_PASSWORD != pwd)
     {
         // password convert to md5
         std::string pwdMd5 = Conver2Md5(pwd);
@@ -117,30 +145,21 @@ LRESULT CLoginDlg::OnOK(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& 
         m_ac.m_password = CA2T(pwdMd5.c_str());
     }
 
-    // check the flag and store account info
-    int chkState = ((CButton)GetDlgItem(IDC_CHECK_ACCOUNT_STORE)).GetCheck();
-    if (TRUE == chkState)
+    // get flags of check box
+    m_ac.m_autologin = ((CButton)GetDlgItem(IDC_CHECK_AUTO_LOGIN)).GetCheck();
+    m_ac.m_storePwd = ((CButton)GetDlgItem(IDC_CHECK_PWD_STORE)).GetCheck();
+
+    // store account info
+    int ret = CSumsAddin::GetAddin()->GetDoc()->WriteUserAccount(m_ac);
+    if (0 != ret)
     {
-        bool ret = CSumsAddin::GetAddin()->GetDoc()->WriteUserAccount(m_ac);
-        if (!ret)
-        {
-            ::MessageBox(this->m_hWnd, L"Store account failed!", L"Login Error", MB_ICONEXCLAMATION);
-            return 0;
-        }
-    }
-    else
-    {
-        bool ret = CSumsAddin::GetAddin()->GetDoc()->ClearUserAccount();
-        if (!ret)
-        {
-            ::MessageBox(this->m_hWnd, L"Clear account failed!", L"Login Error", MB_ICONEXCLAMATION);
-            return 0;
-        }
+        ::MessageBox(this->m_hWnd, L"Store account failed!", L"Login Error", MB_ICONEXCLAMATION);
+        return 0;
     }
 
     // login to CDH
-    bool ret = CSumsAddin::GetAddin()->GetDoc()->LoginCDH(m_ac);
-    if (ret)
+    bool res = CSumsAddin::GetAddin()->GetDoc()->LoginCDH(m_ac);
+    if (res)
     {
         CSumsAddin::GetAddin()->GetDoc()->SetLoginResult(true);
         ::MessageBox(this->m_hWnd, L"Login success.", L"MessageBox", MB_OK);

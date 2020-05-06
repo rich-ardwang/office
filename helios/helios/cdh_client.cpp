@@ -7,15 +7,35 @@
 #include "sfa/msg/value_ascii.h"
 #include "sfa/msg/value_decimal.h"
 
-#define CDH_KVARRAY_FIELD           1
-#define CDH_EXCELADDIN_TYPE         20001
-#define CDH_EXCELADDIN_VALUE        "2100"
+#define HELIOS_CDH_KVARRAY_FIELD           1
+#define HELIOS_CDH_EXCELADDIN_TYPE         20001
+#define HELIOS_CDH_EXCELADDIN_VALUE        "2100"
 
 using namespace sfa::msg;
 
-void CDHClient::CDHListener::onDisConnected()
+void CDHClient::CDHListener::onEvent(const int code)
 {
-    log_error(helios_module, "Connection to gateway disConnected!");
+    switch (code)
+    {
+    case 1:
+        m_parent->m_bConnected = false;
+        log_warn(helios_module, "Disconnected! Auto reconnect.");
+        break;
+    case 2:
+        m_parent->m_bConnected = true;
+        log_info(helios_module, "Reconnect success.");
+        break;
+    case 3:
+        m_parent->m_bConnected = false;
+        log_error(helios_module, "Invalid network! Please contact your network administrator for help.");
+        break;
+    case 4:
+        m_parent->m_bConnected = false;
+        log_error(helios_module, "Kick out by CDH!");
+        break;
+    default:
+        break;
+    }
 }
 
 void CDHClient::CDHListener::onAuthMessage(AuthMessage* pAuthMsg, int len)
@@ -32,17 +52,15 @@ void CDHClient::CDHListener::onAuthMessage(AuthMessage* pAuthMsg, int len)
     }
 }
 
-void CDHClient::CDHListener::onKickOut()
-{
-    log_error(helios_module, "kick out by gateway!");
-}
-
 CDHClient::~CDHClient()
 {
     if (m_pGtwConnector)
     {
         if (m_pToken)
+        {
             m_pGtwConnector->qbLogout(m_pToken);
+            m_pToken = nullptr;
+        }
 
         delete m_pGtwConnector;
         m_pGtwConnector = nullptr;
@@ -57,6 +75,13 @@ CDHClient::~CDHClient()
 
 bool CDHClient::Connect(const std::string &ip, const int &port)
 {
+    if (m_pToken)
+    {
+        m_pGtwConnector->qbLogout(m_pToken);
+        m_bConnected = false;
+        m_pToken = nullptr;
+    }
+
     if (m_bConnected)
         return true;
 
@@ -68,9 +93,16 @@ bool CDHClient::Connect(const std::string &ip, const int &port)
             return false;
         }
         m_pGtwConnector = new GatewayConnector(m_pListener);
+        if (m_pGtwConnector)
+            m_pGtwConnector->setReconnectArgs(m_retryTimes, m_retryTimeSpan);
+        else
+        {
+            log_error(helios_module, "create gateway connector failed!");
+            return false;
+        }
     }
 
-    bool ret = m_pGtwConnector->connect(ip.c_str(), port);
+    bool ret = m_pGtwConnector->connect(ip.c_str(), port, m_timeout);
     if (ret)
         m_bConnected = true;
     else
@@ -88,13 +120,7 @@ bool CDHClient::Login(const std::string &user, const std::string &password)
         return ret;
     }
 
-    if (m_pToken)
-    {
-        m_pGtwConnector->qbLogout(m_pToken);
-        m_pToken = nullptr;
-    }
-
-    ret = m_pGtwConnector->qbLogin(user.c_str(), password.c_str(), &m_pToken);
+    ret = m_pGtwConnector->qbLogin(user.c_str(), password.c_str(), &m_pToken, m_timeout);
     if (ret && m_pToken)
         ret = true;
     else
@@ -114,7 +140,7 @@ bool CDHClient::sendData(const int &funCode, const std::vector<ScContribData> &d
             return false;
 
         log_info(helios_module, "prepare to send data to CDH, SDN message buf size:[%u].", msgLen);
-        bool ret = m_pGtwConnector->syncRequest(m_pToken, funCode, msgBuf, msgLen);
+        bool ret = m_pGtwConnector->syncRequest(m_pToken, funCode, msgBuf, msgLen, m_timeout);
         ReleaseMsgBuf(msgBuf);
         if (ret)
         {
@@ -166,7 +192,7 @@ size_t CDHClient::EncodeSdnMsg(const std::vector<ScContribData> &inData, uint8_t
         if (!initCol)
         {
             kvArray.SetColType((*iter).mode.first, FieldType::ASCII);
-            kvArray.SetColType(CDH_EXCELADDIN_TYPE, FieldType::ASCII);
+            kvArray.SetColType(HELIOS_CDH_EXCELADDIN_TYPE, FieldType::ASCII);
             auto fidIter = (*iter).fids.begin();
             for (; fidIter != (*iter).fids.end(); ++fidIter)
                 kvArray.SetColType(atoi((*fidIter).c_str()), FieldType::DECIMAL);
@@ -176,13 +202,13 @@ size_t CDHClient::EncodeSdnMsg(const std::vector<ScContribData> &inData, uint8_t
         //add record
         KVArrayRowValue* kvRow = kvArray.AddRow();
         kvRow->SetValue((*iter).mode.first, &AsciiValue((*iter).mode.second));
-        kvRow->SetValue(CDH_EXCELADDIN_TYPE, &AsciiValue(CDH_EXCELADDIN_VALUE));
+        kvRow->SetValue(HELIOS_CDH_EXCELADDIN_TYPE, &AsciiValue(HELIOS_CDH_EXCELADDIN_VALUE));
         auto fidIter = (*iter).fids.begin();
         auto valIter = (*iter).vals.begin();
         for (; fidIter != (*iter).fids.end(); ++fidIter, ++valIter)
             kvRow->SetValue(atoi((*fidIter).c_str()), &DecimalValue(*valIter));
     }
-    body->AddField(CDH_KVARRAY_FIELD, &kvArray);
+    body->AddField(HELIOS_CDH_KVARRAY_FIELD, &kvArray);
 
     bool ret = false;
     outLen = 0;

@@ -1,60 +1,36 @@
+
 #pragma once
-#include <string>
-#include "lava_container.h"
-
-typedef uint32_t	hash_val_type;
-
-struct ScContribData
-{
-    std::string asset_class;
-    std::pair<uint32_t, std::string> mode;
-    std::vector<std::string> fids;
-    std::vector<double>		 vals;
-	hash_val_type	hash_val;
-};
+#include "CondChangedFormula.h"
+#include "CondFreqFormula.h"
 
 class ScContribFormula
 {
-	struct CELL_POS
+	enum UPLOAD_MODE { um_none = 0, um_changed = 1, um_frequency = 2 };
+	struct CONDITION
 	{
-		long col;
-		long row;
-		bool operator == (const CELL_POS& rhs) const
-		{
-			return col == rhs.col && row == rhs.row;
-		}
-		//bool operator != (const CELL_POS& rhs) const
-		//{
-		//	return !(this == rhs);
-		//}
-		bool operator < (const CELL_POS& rhs) const
-		{
-			return (col < rhs.col) ? true : (col == rhs.col) ? (row < rhs.row) : false;
-		}
+		UPLOAD_MODE		m_upload_mode;
+		std::string		m_ft;
+		uint32_t		m_fq;
 	};
 
 public:
-	ScContribFormula();
-	~ScContribFormula();
+	ScContribFormula() {};
+	~ScContribFormula() {};
 
-	void OnCalculate();
+	void OnCalculate(__lv_in IDispatch* Sh);
+	void OnSheetChange(__lv_in IDispatch* Sh, __lv_in struct Range* Target);
 	void OnAfterCalculate();
 	void OnStopCalculate();
+	void OnManualSend();
 
 	ATL::CComVariant Calc(long& param_count, ATL::CComVariant** params);
 
 private:
-	ATL::CComVariant CacheFormula(std::string& asset_class, std::string& mode, std::string& format, 
-								std::vector<std::string>& fids, std::vector<double>& vals, int count);
-
-	static std::string standard_mode(std::string str);
-	static std::string standard_format(std::string str);
+	std::string check_mode(std::string str);
+	bool parse_condition(std::string str, CONDITION& ret);
 
 private:
-	lava::utils::vector_lv<ScContribData>			m_data_to_send;
-	lava::utils::map_lv<hash_val_type, bool>		m_hash_data;
-	lava::utils::map_lv<CELL_POS, hash_val_type>	m_pos_hash;
-	ATL::CComPtr<Range>								m_single_cell;
-	bool	m_prev_sent;
+	CondChangedFormula	m_cond_changed_formula;
+	CondFreqFormula m_cond_freq_formula;
 };
 
