@@ -62,6 +62,7 @@ private:
 
 	HRESULT GetResource(int nId, LPCTSTR lpType, LPVOID* ppvResourceData, DWORD* pdwSizeInBytes);
 	BSTR GetXmlResource(int nId);
+    HBITMAP LoadImageFromResource(UINT nResourceId, LPCTSTR pszResType = _T("PNG"));
 
 	void CaptureExcelMainHwnd();
 

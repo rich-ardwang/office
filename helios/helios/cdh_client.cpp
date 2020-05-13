@@ -17,20 +17,22 @@ void CDHClient::CDHListener::onEvent(const int code)
 {
     switch (code)
     {
-    case 1:
+    case EVENT_CDH_DISCONNECT:
         m_parent->m_bConnected = false;
         log_warn(helios_module, "Disconnected! Auto reconnect.");
         break;
-    case 2:
+    case EVENT_CDH_RECONNECT_OK:
         m_parent->m_bConnected = true;
         log_info(helios_module, "Reconnect success.");
         break;
-    case 3:
+    case EVENT_CDH_INVALID_NETWORK:
         m_parent->m_bConnected = false;
+        m_parent->clearCurrentAccount();
         log_error(helios_module, "Invalid network! Please contact your network administrator for help.");
         break;
-    case 4:
+    case EVENT_CDH_KICK_OUT:
         m_parent->m_bConnected = false;
+        m_parent->clearCurrentAccount();
         log_error(helios_module, "Kick out by CDH!");
         break;
     default:
@@ -56,10 +58,10 @@ CDHClient::~CDHClient()
 {
     if (m_pGtwConnector)
     {
-        if (m_pToken)
+        if (m_currAccInfo.m_pToken)
         {
-            m_pGtwConnector->qbLogout(m_pToken);
-            m_pToken = nullptr;
+            m_pGtwConnector->qbLogout(m_currAccInfo.m_pToken);
+            m_currAccInfo.m_pToken = nullptr;
         }
 
         delete m_pGtwConnector;
@@ -75,11 +77,11 @@ CDHClient::~CDHClient()
 
 bool CDHClient::Connect(const std::string &ip, const int &port)
 {
-    if (m_pToken)
+    if (m_currAccInfo.m_pToken)
     {
-        m_pGtwConnector->qbLogout(m_pToken);
+        m_pGtwConnector->qbLogout(m_currAccInfo.m_pToken);
         m_bConnected = false;
-        m_pToken = nullptr;
+        clearCurrentAccount();
     }
 
     if (m_bConnected)
@@ -113,25 +115,36 @@ bool CDHClient::Connect(const std::string &ip, const int &port)
 
 bool CDHClient::Login(const std::string &user, const std::string &password)
 {
-    bool ret = false;
     if ((!m_bConnected) || (nullptr == m_pGtwConnector))
     {
         log_error(helios_module, "connect first!");
-        return ret;
+        return false;
     }
 
-    ret = m_pGtwConnector->qbLogin(user.c_str(), password.c_str(), &m_pToken, m_timeout);
-    if (ret && m_pToken)
-        ret = true;
-    else
-        log_error(helios_module, "login failed!");
+    if ((m_currAccInfo.m_curUser == user)
+        && (m_currAccInfo.m_curPwd == password)
+        && (m_currAccInfo.m_pToken))
+    {
+        log_info(helios_module, "this account has already login, username:%s, token:%s",
+            user.c_str(), m_currAccInfo.m_pToken);
+        return true;
+    }
 
-    return ret;
+    bool ret = m_pGtwConnector->qbLogin(user.c_str(), password.c_str(), &m_currAccInfo.m_pToken, m_timeout);
+    if (ret && m_currAccInfo.m_pToken)
+    {
+        m_currAccInfo.m_curUser = user;
+        m_currAccInfo.m_curPwd = password;
+        return true;
+    }
+
+    log_error(helios_module, "login failed!");
+    return false;
 }
 
 bool CDHClient::sendData(const int &funCode, const std::vector<ScContribData> &data)
 {
-    if (m_pToken && m_pGtwConnector)
+    if (m_currAccInfo.m_pToken && m_pGtwConnector)
     {
         uint8_t *msgBuf = nullptr;
         unsigned int msgLen = 0;
@@ -139,8 +152,17 @@ bool CDHClient::sendData(const int &funCode, const std::vector<ScContribData> &d
         if ((0 == recordCnt) || (nullptr == msgBuf) || (0 == msgLen))
             return false;
 
+        bool ret = false;            
         log_info(helios_module, "prepare to send data to CDH, SDN message buf size:[%u].", msgLen);
-        bool ret = m_pGtwConnector->syncRequest(m_pToken, funCode, msgBuf, msgLen, m_timeout);
+        try
+        {
+            ret = m_pGtwConnector->syncRequest(m_currAccInfo.m_pToken, funCode, msgBuf, msgLen, m_timeout);
+        }
+        catch (std::exception & e)
+        {
+            log_error(helios_module, "exception happened in syncRequest: %s", e.what());
+        }
+
         ReleaseMsgBuf(msgBuf);
         if (ret)
         {
@@ -159,8 +181,8 @@ bool CDHClient::sendData(const int &funCode, const std::vector<ScContribData> &d
 
 void CDHClient::getAuth()
 {
-    if (m_pToken && m_pGtwConnector)
-        m_pGtwConnector->getAuthority(m_pToken);
+    if (m_currAccInfo.m_pToken && m_pGtwConnector)
+        m_pGtwConnector->getAuthority(m_currAccInfo.m_pToken);
 }
 
 size_t CDHClient::EncodeSdnMsg(const std::vector<ScContribData> &inData, uint8_t*& outBytes, unsigned int &outLen)
@@ -206,7 +228,19 @@ size_t CDHClient::EncodeSdnMsg(const std::vector<ScContribData> &inData, uint8_t
         auto fidIter = (*iter).fids.begin();
         auto valIter = (*iter).vals.begin();
         for (; fidIter != (*iter).fids.end(); ++fidIter, ++valIter)
-            kvRow->SetValue(atoi((*fidIter).c_str()), &DecimalValue(*valIter));
+        {
+            double value = *valIter;
+            if (0x8000000000000000 == *((uint64_t*)&value))
+            {
+                // empty value : -0.0
+                kvRow->SetValue(atoi((*fidIter).c_str()), &DecimalValue(FieldDesc::Null));
+            }
+            else
+            {
+                // need not set field desc, the default value is FieldDesc:NORMAL
+                kvRow->SetValue(atoi((*fidIter).c_str()), &DecimalValue(value));
+            }
+        }
     }
     body->AddField(HELIOS_CDH_KVARRAY_FIELD, &kvArray);
 

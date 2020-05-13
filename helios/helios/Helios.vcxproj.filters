@@ -64,6 +64,9 @@
     <ClCompile Include="Helios_i.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CEditEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AddinMsgWnd.h">
@@ -138,21 +141,24 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CEditEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="config.bmp">
-      <Filter>Resource Files</Filter>
-    </Image>
     <Image Include="icon_main.ico">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="login.bmp">
+    <Image Include="config.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="logout.bmp">
+    <Image Include="login.png">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="man_send.bmp">
+    <Image Include="logout.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="man_send.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 #include "resource.h"
 #include "SumsAddin.h"
@@ -100,13 +99,12 @@ STDMETHODIMP CUiMgr::RbnOnChkBox(IDispatch* pDispCtrl, BOOL bChecked)
 
 STDMETHODIMP_(IPictureDisp*) CUiMgr::RbnLoadImage(UINT image_id)
 {
-    HBITMAP hBitmap = (HBITMAP)::LoadImage(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(image_id), 
-                                IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTCOLOR /*| LR_LOADFROMFILE*/ );
+    HBITMAP hBitmap = LoadImageFromResource(image_id);
     PICTDESC pictdesc = { 0 };
     pictdesc.cbSizeofstruct = sizeof(PICTDESC);
     pictdesc.picType = PICTYPE_BITMAP;
     pictdesc.bmp.hbitmap = hBitmap;
-    pictdesc.bmp.hpal = NULL; // (HPALETTE)::GetStockObject(DEFAULT_PALETTE);
+    pictdesc.bmp.hpal = NULL;
 
     IPictureDisp* pReturn = nullptr;
     ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
@@ -120,54 +118,36 @@ STDMETHODIMP_(IPictureDisp*) CUiMgr::RbnGetImage(IDispatch* pDispCtrl)
 
     CComBSTR ctrl_id;
     HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
+    UINT imageId = 0;
     if (ctrl_id == _T("LoginButton"))
     {
-        UINT imageId = 0;
         if (CSumsAddin::GetAddin()->GetDoc()->GetLoginResult())
-            imageId = IDB_BITMAP_LOGOUT;
+            imageId = IDB_PNG_LOGOUT;
         else
-            imageId = IDB_BITMAP_LOGIN;
-
-        HBITMAP hBitmap = (HBITMAP)::LoadImage(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(imageId),
-            IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTCOLOR);
-        PICTDESC pictdesc = { 0 };
-        pictdesc.cbSizeofstruct = sizeof(PICTDESC);
-        pictdesc.picType = PICTYPE_BITMAP;
-        pictdesc.bmp.hbitmap = hBitmap;
-        pictdesc.bmp.hpal = NULL;
-        IPictureDisp* pReturn = nullptr;
-        ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
-        return pReturn;
+            imageId = IDB_PNG_LOGIN;
     }
     else if (ctrl_id == _T("ConfigButton"))
     {
-        UINT imageId = IDB_BITMAP_CONFIG;
-        HBITMAP hBitmap = (HBITMAP)::LoadImage(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(imageId),
-            IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTCOLOR);
-        PICTDESC pictdesc = { 0 };
-        pictdesc.cbSizeofstruct = sizeof(PICTDESC);
-        pictdesc.picType = PICTYPE_BITMAP;
-        pictdesc.bmp.hbitmap = hBitmap;
-        pictdesc.bmp.hpal = NULL;
-        IPictureDisp* pReturn = nullptr;
-        ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
-        return pReturn;
+        imageId = IDB_PNG_CONFIG;
     }
     else if (ctrl_id == _T("ManSendButton"))
     {
-        UINT imageId = IDB_BITMAP_MANSEND;
-        HBITMAP hBitmap = (HBITMAP)::LoadImage(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(imageId),
-            IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_DEFAULTCOLOR);
-        PICTDESC pictdesc = { 0 };
-        pictdesc.cbSizeofstruct = sizeof(PICTDESC);
-        pictdesc.picType = PICTYPE_BITMAP;
-        pictdesc.bmp.hbitmap = hBitmap;
-        pictdesc.bmp.hpal = NULL;
-        IPictureDisp* pReturn = nullptr;
-        ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
-        return pReturn;
+        imageId = IDB_PNG_MANSEND;
     }
-    return nullptr;
+    else
+    {
+        return nullptr;
+    }
+
+    HBITMAP hBitmap = LoadImageFromResource(imageId);
+    PICTDESC pictdesc = { 0 };
+    pictdesc.cbSizeofstruct = sizeof(PICTDESC);
+    pictdesc.picType = PICTYPE_BITMAP;
+    pictdesc.bmp.hbitmap = hBitmap;
+    pictdesc.bmp.hpal = NULL;
+    IPictureDisp* pReturn = nullptr;
+    ::OleCreatePictureIndirect(&pictdesc, IID_IPictureDisp, TRUE, (void**)&pReturn);
+    return pReturn;
 }
 
 STDMETHODIMP_(LONG) CUiMgr::RbnGetSize(IDispatch* pDispCtrl)
@@ -177,6 +157,26 @@ STDMETHODIMP_(LONG) CUiMgr::RbnGetSize(IDispatch* pDispCtrl)
 
 STDMETHODIMP_(BSTR) CUiMgr::RbnGetDesc(IDispatch* pDispCtrl)
 {
+    CComQIPtr<IRibbonControl> rbn_ctrl = pDispCtrl;
+    ATLASSERT(rbn_ctrl);
+
+    CComBSTR ctrl_id;
+    HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
+    if (ctrl_id == _T("LoginButton"))
+    {
+        CComBSTR desc(L"login button description");
+        return desc.Detach();
+    }
+    else if (ctrl_id == _T("ConfigButton"))
+    {
+        CComBSTR desc(L"config button description");
+        return desc.Detach();
+    }
+    else if (ctrl_id == _T("ManSendButton"))
+    {
+        CComBSTR desc(L"manual send button description");
+        return desc.Detach();
+    }
     return nullptr;
 }
 
@@ -228,11 +228,83 @@ STDMETHODIMP_(BSTR) CUiMgr::RbnGetKeyTip(IDispatch* pDispCtrl)
 
 STDMETHODIMP_(BSTR) CUiMgr::RbnGetScreenTip(IDispatch* pDispCtrl)
 {
+    CComQIPtr<IRibbonControl> rbn_ctrl = pDispCtrl;
+    ATLASSERT(rbn_ctrl);
+
+    CComBSTR ctrl_id;
+    HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
+    if (ctrl_id == _T("LoginButton"))
+    {
+        if (CSumsAddin::GetAddin()->GetDoc()->GetLoginResult())
+        {
+            CString str;
+            str.LoadString(IDS_ALREADY_LOGIN);
+            CComBSTR screen_tip(str);
+            return screen_tip.Detach();
+        }
+        else
+        {
+            CString str;
+            str.LoadString(IDS_PLEASE_LOGIN);
+            CComBSTR screen_tip(str);
+            return screen_tip.Detach();
+        }
+    }
+    else if (ctrl_id == _T("ConfigButton"))
+    {
+        CString str;
+        str.LoadString(IDS_GLOBAL_CONFIG);
+        CComBSTR screen_tip(str);
+        return screen_tip.Detach();
+    }
+    else if (ctrl_id == _T("ManSendButton"))
+    {
+        CString str;
+        str.LoadString(IDS_MAN_SEND);
+        CComBSTR screen_tip(str);
+        return screen_tip.Detach();
+    }
     return nullptr;
 }
 
 STDMETHODIMP_(BSTR) CUiMgr::RbnGetSuperTip(IDispatch* pDispCtrl)
 {
+    CComQIPtr<IRibbonControl> rbn_ctrl = pDispCtrl;
+    ATLASSERT(rbn_ctrl);
+
+    CComBSTR ctrl_id;
+    HRESULT hr = rbn_ctrl->get_Id(&ctrl_id);
+    if (ctrl_id == _T("LoginButton"))
+    {
+        if (CSumsAddin::GetAddin()->GetDoc()->GetLoginResult())
+        {
+            CString str;
+            str.LoadString(IDS_ALREADY_LOGIN);
+            CComBSTR super_tip(str);
+            return super_tip.Detach();
+        }
+        else
+        {
+            CString str;
+            str.LoadString(IDS_PLEASE_LOGIN);
+            CComBSTR super_tip(str);
+            return super_tip.Detach();
+        }
+    }
+    else if (ctrl_id == _T("ConfigButton"))
+    {
+        CString str;
+        str.LoadString(IDS_GLOBAL_CONFIG_TIP);
+        CComBSTR super_tip(str);
+        return super_tip.Detach();
+    }
+    else if (ctrl_id == _T("ManSendButton"))
+    {
+        CString str;
+        str.LoadString(IDS_MAN_SEND_TIP);
+        CComBSTR super_tip(str);
+        return super_tip.Detach();
+    }
     return nullptr;
 }
 
@@ -298,6 +370,40 @@ BSTR CUiMgr::GetXmlResource(int nId)
     // Assumes that the data is not stored in Unicode.
     CComBSTR cbstr(dwSizeInBytes, reinterpret_cast<LPCSTR>(pResourceData));
     return cbstr.Detach();
+}
+
+HBITMAP CUiMgr::LoadImageFromResource(UINT nResourceId, LPCTSTR pszResType/* = _T("PNG") */)
+{
+    HBITMAP hBitmap = NULL;
+    HRSRC hRsrc = ::FindResource(_AtlBaseModule.GetModuleInstance(), MAKEINTRESOURCE(nResourceId), pszResType);
+    if ( hRsrc == NULL )
+        return hBitmap;
+
+    // load resource into memory
+    DWORD len = SizeofResource(_AtlBaseModule.GetModuleInstance(), hRsrc);
+    BYTE* lpRsrc = (BYTE*)LoadResource(_AtlBaseModule.GetModuleInstance(), hRsrc);
+    if (lpRsrc == NULL)
+        return hBitmap;
+
+    // allocate global memory on which to create stream
+    HGLOBAL hGlbMem = GlobalAlloc(GMEM_FIXED, len);
+    BYTE* pByte = (BYTE*)GlobalLock(hGlbMem);
+    memcpy(pByte, lpRsrc, len);
+    IStream* pStm;
+    CreateStreamOnHGlobal(hGlbMem, FALSE, &pStm);
+
+    // load from stream
+    CImage image;
+    image.Load(pStm);
+    hBitmap = image.Detach();
+
+    // release tmp buffer
+    GlobalUnlock(hGlbMem);
+    FreeResource(lpRsrc);
+    if (pStm)
+        pStm->Release();
+
+    return hBitmap;
 }
 
 void CUiMgr::CaptureExcelMainHwnd()

@@ -355,6 +355,7 @@ int CDoc::GetGlobalConfigInfo(GlobalInfo& gbInfo)
     }
 
     //read from file
+    in >> gbInfo.m_changedSendInfo.m_formatPrecision;
     in >> gbInfo.m_FreqSendInfo.m_defaultSendTimeSpan;
     in >> gbInfo.m_FreqSendInfo.m_sendDataRightNow;
     in.close();
@@ -370,9 +371,10 @@ int CDoc::WriteGlobalConfigInfo(const GlobalInfo &gbInfo)
     std::ofstream out(filePath);
     if (out)
     {
-        out << gbInfo.m_FreqSendInfo.m_defaultSendTimeSpan
+        out << gbInfo.m_changedSendInfo.m_formatPrecision
+            << " " << gbInfo.m_FreqSendInfo.m_defaultSendTimeSpan
             << " " << gbInfo.m_FreqSendInfo.m_sendDataRightNow
-            <<std::endl;
+            << std::endl;
         out.close();
         ret = 0;
     }
@@ -386,7 +388,10 @@ bool CDoc::LoginCDH(const accoutInfo &acInfo)
 {
     bool ret = false;
     if (nullptr == m_cliProxy)
+    {
+        log_error(helios_module, "CDH client not init! Maybe CDoc Initialzie incorrectly.");
         return ret;
+    }
 
     if (!m_cliProxy->isConnected())
     {

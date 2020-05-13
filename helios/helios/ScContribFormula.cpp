@@ -122,9 +122,8 @@ CComVariant ScContribFormula::Calc(long& param_count, CComVariant** params)
 		val_arr.GetElement(&pos, &val);
 		if (val.vt == VT_EMPTY)
 		{
-			CString str;
-			str.LoadString(IDS_EMPTY);
-			return CComVariant(str);
+			val.vt = VT_R8;
+			val.llVal = 0x8000000000000000; // val.dblVal = -0.0;
 		}
 		vals.push_back(val.dblVal);
 	}

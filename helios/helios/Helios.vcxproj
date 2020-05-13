@@ -247,6 +247,7 @@
     <ClCompile Include="CCalcEngine.cpp" />
     <ClCompile Include="cdh_client.cpp" />
     <ClCompile Include="CDoc.cpp" />
+    <ClCompile Include="CEditEx.cpp" />
     <ClCompile Include="CMatrixData.cpp" />
     <ClCompile Include="ConfigDlg.cpp" />
     <ClCompile Include="CondChangedFormula.cpp" />
@@ -314,6 +315,7 @@
     <ClInclude Include="CCalcEngine.h" />
     <ClInclude Include="cdh_client.h" />
     <ClInclude Include="CDoc.h" />
+    <ClInclude Include="CEditEx.h" />
     <ClInclude Include="CMatrixData.h" />
     <ClInclude Include="ConfigDlg.h" />
     <ClInclude Include="CondChangedFormula.h" />
@@ -349,10 +351,10 @@
     <Midl Include="Helios.idl" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="config.bmp" />
-    <Image Include="login.bmp" />
-    <Image Include="logout.bmp" />
-    <Image Include="man_send.bmp" />
+    <Image Include="config.png" />
+    <Image Include="login.png" />
+    <Image Include="logout.png" />
+    <Image Include="man_send.png" />
     <Xml Include="ribbon.xml" />
     <Image Include="icon_main.ico" />
   </ItemGroup>

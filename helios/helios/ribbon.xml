@@ -7,11 +7,11 @@
         <!--group idMso="GroupFont"/-->
         <!--group idMso="GroupFormulaAuditing"/-->
         <group id="SumscopeDataMarket" label="数据集市">
-          <button id="ManSendButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage"/>
+          <button id="ManSendButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage" getScreentip="RbnGetScreenTip" getSupertip="RbnGetSuperTip"/>
         </group>
 				<group id="SumscopeAuxiliary" label="辅助功能">
-          <button id="ConfigButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage"/>
-					<button id="LoginButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage"/>
+          <button id="ConfigButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage" getScreentip="RbnGetScreenTip" getSupertip="RbnGetSuperTip"/>
+					<button id="LoginButton" size="large" onAction="RbnOnBtnClick" getEnabled="RbnGetEnabled" getLabel="RbnGetLabel" getImage="RbnGetImage" getScreentip="RbnGetScreenTip" getSupertip="RbnGetSuperTip"/>
 				</group>
 			</tab>
 		</tabs>

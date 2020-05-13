@@ -38,6 +38,12 @@ typedef struct conf
 
 typedef struct tagGlobalInfo
 {
+    typedef struct tagChangedSendInfo
+    {
+        std::string     m_formatPrecision;
+        tagChangedSendInfo() : m_formatPrecision("10.2") {}
+    } ChangedSendInfo;
+
     typedef struct tagFreqSendInfo
     {
         int     m_defaultSendTimeSpan;
@@ -45,7 +51,8 @@ typedef struct tagGlobalInfo
         tagFreqSendInfo() : m_defaultSendTimeSpan(60), m_sendDataRightNow(false) {}
     } FreqSendInfo;
 
-    FreqSendInfo   m_FreqSendInfo;
+    ChangedSendInfo     m_changedSendInfo;
+    FreqSendInfo        m_FreqSendInfo;
 } GlobalInfo;
 
 class CDoc
