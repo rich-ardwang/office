@@ -182,14 +182,12 @@ LRESULT CLoginDlg::OnOK(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& 
     bool res = CSumsAddin::GetAddin()->GetDoc()->LoginCDH(m_ac);
     if (res)
     {
-        CSumsAddin::GetAddin()->GetDoc()->SetLoginResult(true);
         boxString.LoadString(IDS_MSGBOX_INFO_LOGIN_SUCCESS);
         boxCaption.LoadString(IDS_MSGBOX_INFO_LOGIN);
         ::MessageBox(this->m_hWnd, boxString, boxCaption, MB_OK);
     }
     else
     {
-        CSumsAddin::GetAddin()->GetDoc()->SetLoginResult(false);
         boxString.LoadString(IDS_MSGBOX_ERROR_LOGIN_FAILED);
         boxCaption.LoadString(IDS_MSGBOX_ERROR_LOGIN);
         ::MessageBox(this->m_hWnd, boxString, boxCaption, MB_ICONEXCLAMATION);

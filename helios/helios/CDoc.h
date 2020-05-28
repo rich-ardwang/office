@@ -63,10 +63,7 @@ public:
 	~CDoc();
 
 	void Initialzie();
-	inline void SetLoginResult(bool is_success)
-	{
-		m_is_login = is_success;
-	}
+    void SetLoginResult(bool is_success);
 	inline bool GetLoginResult()
 	{
 		return m_is_login;

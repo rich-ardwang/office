@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "cdh_client.h"
 #include "lava_utils_api.h"
+#include "SumsAddin.h"
 #include "sfa/msg/msg.h"
 #include "sfa/msg/msg_codec.h"
 #include "sfa/msg/value_kv_array.h"
@@ -19,22 +20,30 @@ void CDHClient::CDHListener::onEvent(const int code)
     {
     case EVENT_CDH_DISCONNECT:
         m_parent->m_bConnected = false;
-        log_warn(helios_module, "Disconnected! Auto reconnect.");
+        m_parent->clearCurrToken();
+        log_warn(helios_module, "Disconnected! Auto reconnect...");
         break;
+
     case EVENT_CDH_RECONNECT_OK:
         m_parent->m_bConnected = true;
-        log_info(helios_module, "Reconnect success.");
+        log_info(helios_module, "Reconnect success. Auto login...");
+        m_parent->autoLogin();
         break;
+
     case EVENT_CDH_INVALID_NETWORK:
         m_parent->m_bConnected = false;
         m_parent->clearCurrentAccount();
         log_error(helios_module, "Invalid network! Please contact your network administrator for help.");
         break;
+
     case EVENT_CDH_KICK_OUT:
         m_parent->m_bConnected = false;
-        m_parent->clearCurrentAccount();
-        log_error(helios_module, "Kick out by CDH!");
+        m_parent->clearCurrToken();
+        log_warn(helios_module, "Kick out by CDH! Auto reconnect and login...");
+        if (m_parent->autoReconnect())
+            m_parent->autoLogin();
         break;
+
     default:
         break;
     }
@@ -94,7 +103,18 @@ bool CDHClient::Connect(const std::string &ip, const int &port)
             log_error(helios_module, "CDH listener pointer is null!");
             return false;
         }
-        m_pGtwConnector = new GatewayConnector(m_pListener);
+
+        if (m_cdhLogPath.empty())
+        {
+            m_pGtwConnector = new GatewayConnector(m_pListener);
+            log_info(helios_module, "Do not open CDH log.");
+        }
+        else
+        {
+            m_pGtwConnector = new GatewayConnector(m_pListener, m_cdhLogPath.c_str());
+            log_info(helios_module, "Open CDH log.");
+        }
+
         if (m_pGtwConnector)
             m_pGtwConnector->setReconnectArgs(m_retryTimes, m_retryTimeSpan);
         else
@@ -106,7 +126,11 @@ bool CDHClient::Connect(const std::string &ip, const int &port)
 
     bool ret = m_pGtwConnector->connect(ip.c_str(), port, m_timeout);
     if (ret)
+    {
         m_bConnected = true;
+        m_currGtwIngo.m_gtwIp = ip;
+        m_currGtwIngo.m_gtwPort = port;
+    }
     else
         log_error(helios_module, "connect CDH failed!");
 
@@ -135,15 +159,24 @@ bool CDHClient::Login(const std::string &user, const std::string &password)
     {
         m_currAccInfo.m_curUser = user;
         m_currAccInfo.m_curPwd = password;
+        CSumsAddin::GetAddin()->GetDoc()->SetLoginResult(true);
         return true;
     }
 
+    m_currAccInfo.m_pToken = nullptr;
     log_error(helios_module, "login failed!");
+    CSumsAddin::GetAddin()->GetDoc()->SetLoginResult(false);
     return false;
 }
 
 bool CDHClient::sendData(const int &funCode, const std::vector<ScContribData> &data)
 {
+    if (!m_bConnected)
+    {
+        log_warn(helios_module, "connect state is invalid!");
+        return false;
+    }
+
     if (m_currAccInfo.m_pToken && m_pGtwConnector)
     {
         uint8_t *msgBuf = nullptr;
@@ -152,7 +185,7 @@ bool CDHClient::sendData(const int &funCode, const std::vector<ScContribData> &d
         if ((0 == recordCnt) || (nullptr == msgBuf) || (0 == msgLen))
             return false;
 
-        bool ret = false;            
+        bool ret = false;
         log_info(helios_module, "prepare to send data to CDH, SDN message buf size:[%u].", msgLen);
         try
         {
@@ -183,6 +216,53 @@ void CDHClient::getAuth()
 {
     if (m_currAccInfo.m_pToken && m_pGtwConnector)
         m_pGtwConnector->getAuthority(m_currAccInfo.m_pToken);
+}
+
+void CDHClient::clearCurrentAccount()
+{
+    m_currAccInfo.m_curUser.clear();
+    m_currAccInfo.m_curPwd.clear();
+    m_currAccInfo.m_pToken = nullptr;
+}
+
+void CDHClient::clearCurrToken() 
+{ 
+    m_currAccInfo.m_pToken = nullptr; 
+    CSumsAddin::GetAddin()->GetDoc()->SetLoginResult(false);
+}
+
+void CDHClient::autoLogin()
+{
+    if ( !m_currAccInfo.m_curUser.empty() && !m_currAccInfo.m_curPwd.empty() )
+    {
+        bool ret = Login(m_currAccInfo.m_curUser, m_currAccInfo.m_curPwd);
+        if (ret)
+        {
+            log_info(helios_module, "Auto login to CDH success.");
+            return;
+        }
+    }
+    log_error(helios_module, "Can not auto login to CDH!");
+}
+
+bool CDHClient::autoReconnect()
+{
+    if (!m_bConnected)
+    {
+        bool ret = Connect(m_currGtwIngo.m_gtwIp, m_currGtwIngo.m_gtwPort);
+        if (ret)
+        {
+            log_info(helios_module, "Auto reconnect to CDH success.");
+            return true;
+        }
+        else
+        {
+            log_error(helios_module, "Auto reconnect to CDH failed!");
+            return false;
+        }
+    }
+    log_info(helios_module, "Already connect to CDH.");
+    return true;
 }
 
 size_t CDHClient::EncodeSdnMsg(const std::vector<ScContribData> &inData, uint8_t*& outBytes, unsigned int &outLen)

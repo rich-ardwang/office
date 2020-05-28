@@ -21,6 +21,7 @@ CDoc::~CDoc()
 void CDoc::Initialzie()
 {
 	std::wstring xla_file = CSumsAddin::GetAddin()->GetModulePath();
+    std::wstring cdh_log_path(xla_file);
 	xla_file += L"sumscope.xla";
 
 	CComPtr<_Workbook> spWorkbook;
@@ -36,24 +37,29 @@ void CDoc::Initialzie()
     loadConfig();
     m_cliProxy->setAutoReconnect(m_confInfo.m_retryTimes, m_confInfo.m_retrySpan);
     m_cliProxy->setTimeout(m_confInfo.m_timeout);
+    m_cliProxy->setCDHLogPath(cdh_log_path);
 
     //auto login CDH
-    if (!m_is_login)
+    if ( !m_is_login )
     {
         accoutInfo ac;
         int ret = GetUserAccount(ac);
-        if (0 == ret)
+        if ( 0 == ret )
         {
-            if (TRUE == ac.m_autologin)
+            if ( TRUE == ac.m_autologin )
             {
                 bool res = LoginCDH(ac);
-                if (res)
-                    m_is_login = true;
-                else
+                if ( !res )
                     log_error(helios_module, "auto login CDH failed!");
             }
         }
     }
+}
+
+void CDoc::SetLoginResult(bool is_success)
+{
+    m_is_login = is_success;
+    CSumsAddin::GetAddin()->GetUiMgr()->PostCustomMessage(WM_LOGIN, 0, 0);
 }
 
 CComVariant CDoc::SingleCalc(char* func_name, CCalcEngine::CodeType code_type, long& param_count, CComVariant** params)
@@ -407,8 +413,6 @@ bool CDoc::LoginCDH(const accoutInfo &acInfo)
         return ret;
 
     m_cliProxy->getAuth();
-    m_is_login = true;
-    CSumsAddin::GetAddin()->GetUiMgr()->PostCustomMessage(WM_LOGIN, 0, 0);
     return ret;
 }
 

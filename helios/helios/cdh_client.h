@@ -43,7 +43,8 @@ private:
                          m_bConnected(false),
                          m_timeout(5),
                          m_retryTimes(5),
-                         m_retryTimeSpan(3)
+                         m_retryTimeSpan(3),
+                         m_cdhLogPath(L"")
     {
         m_pListener = new CDHListener(this);
     }
@@ -58,17 +59,16 @@ public:
         m_retryTimeSpan = rtyTimeSpan;
     }
     inline void setTimeout(int timeout) { m_timeout = timeout; }
+    inline void setCDHLogPath(const std::wstring &path) { m_cdhLogPath = path; }
     inline bool isConnected() { return m_bConnected; }
     bool Connect(const std::string &ip, const int &port);
     bool Login(const std::string &user, const std::string &password);
     bool sendData(const int &funCode, const std::vector<ScContribData> &data);
     void getAuth();
-    inline void clearCurrentAccount()
-    {
-        m_currAccInfo.m_curUser.clear();
-        m_currAccInfo.m_curPwd.clear();
-        m_currAccInfo.m_pToken = nullptr;
-    }
+    inline void clearCurrentAccount();
+    inline void clearCurrToken();
+    void autoLogin();
+    bool autoReconnect();
 
 private:
     size_t EncodeSdnMsg(const std::vector<ScContribData> &inData, uint8_t*& outBytes, unsigned int &outLen);
@@ -79,18 +79,26 @@ private:
         std::string         m_curUser;
         std::string         m_curPwd;
         char*               m_pToken;
-
         tagCurrentAccInfo() : m_curUser(""),
                               m_curPwd(""),
                               m_pToken(nullptr) {}
     } CurrentAccInfo;
+
+    typedef struct tagCurrentGatewayInfo
+    {
+        std::string     m_gtwIp;
+        int             m_gtwPort;
+        tagCurrentGatewayInfo() : m_gtwIp(""), m_gtwPort(0) {}
+    } CurrentGatewayInfo;
 
 private:
     GatewayConnector*   m_pGtwConnector;
     CDHListener*        m_pListener;
     bool                m_bConnected;
     CurrentAccInfo      m_currAccInfo;
+    CurrentGatewayInfo  m_currGtwIngo;
     int                 m_timeout;
     int                 m_retryTimes;
     int                 m_retryTimeSpan;
+    std::wstring        m_cdhLogPath;
 };
